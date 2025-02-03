@@ -28,8 +28,12 @@ pub fn parse_emails(
 			if transaction.is_none() {
 				continue;
 			}
+			let transaction = transaction.unwrap();
 
-			map.insert(mail, transaction.unwrap());
+			#[cfg(debug_assertions)]
+			println!("{:#?}", transaction);
+
+			map.insert(mail, transaction);
 			break;
 		}
 	}
