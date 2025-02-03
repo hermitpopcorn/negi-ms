@@ -9,7 +9,7 @@ pub async fn append_to_sheet(
 	transactions: HashMap<Mail, Transaction>,
 ) -> Result<HashMap<Mail, Transaction>, Box<dyn std::error::Error>> {
 	let spreadsheet_id = env::var("SPREADSHEET_ID")?;
-	let range = "Transactions!A:C";
+	let range = "Transactions!A:D";
 	let url = format!(
 		"https://sheets.googleapis.com/v4/spreadsheets/{}/values/{}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
 		spreadsheet_id, range
@@ -22,6 +22,7 @@ pub async fn append_to_sheet(
 
 	for transaction in transactions.values() {
 		let row = vec![
+			transaction.account.clone(),
 			transaction.subject.clone().unwrap_or("".to_string()),
 			transaction
 				.timestamp

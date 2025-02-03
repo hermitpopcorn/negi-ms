@@ -5,7 +5,9 @@ use crate::mail::{Mail, parsers::parse_regex_first_match};
 
 use super::{EmailParsingScheme, Transaction};
 
-pub struct RakutenPayParsingScheme {}
+pub struct RakutenPayParsingScheme {
+	pub account: String,
+}
 
 impl EmailParsingScheme for RakutenPayParsingScheme {
 	fn can_parse(&self, mail: &Mail) -> bool {
@@ -68,6 +70,7 @@ impl EmailParsingScheme for RakutenPayParsingScheme {
 			subject: Some(subject),
 			timestamp,
 			amount: amount,
+			account: self.account.clone(),
 		}))
 	}
 }

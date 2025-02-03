@@ -11,7 +11,9 @@ mod types;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	dotenv().ok();
-	let parsers: Vec<Box<dyn EmailParsingScheme>> = vec![Box::new(RakutenPayParsingScheme {})];
+	let parsers: Vec<Box<dyn EmailParsingScheme>> = vec![Box::new(RakutenPayParsingScheme {
+		account: String::from("Rakuten Pay"),
+	})];
 
 	let mails = mail::reader::read_emails().await?;
 	let transactions = mail::parsers::parse_emails(mails, &parsers)?;
