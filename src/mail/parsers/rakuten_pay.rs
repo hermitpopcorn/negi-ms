@@ -14,7 +14,7 @@ impl EmailParsingScheme for RakutenPayParsingScheme {
 
 	fn parse(&self, mail: &Mail) -> Result<Option<Transaction>, Box<dyn std::error::Error>> {
 		// Amount
-		let amount_captures = parse_regex_first_match(&mail.body, r"決済総額 ¥([0-9\,]+)", 1)?;
+		let amount_captures = parse_regex_first_match(&mail.body, r"決済総額\s+([0-9\,]+)", 1)?;
 		if amount_captures.is_none() {
 			eprintln!("No amount data found!");
 			return Ok(None);
@@ -32,7 +32,7 @@ impl EmailParsingScheme for RakutenPayParsingScheme {
 		// Timestamp
 		let timestamp_captures = parse_regex_first_match(
 			&mail.body,
-			r"ご利用日時 ([0-9]+)\/([0-9]+)\/([0-9]+)\((.)\) ([0-9]+):([0-9]+)",
+			r"ご利用日時\s+([0-9]+)\/([0-9]+)\/([0-9]+)\((.)\) ([0-9]+):([0-9]+)",
 			6,
 		)?;
 		if timestamp_captures.is_none() {
@@ -56,7 +56,7 @@ impl EmailParsingScheme for RakutenPayParsingScheme {
 		let timestamp = jst_timestamp.with_timezone(&Utc);
 
 		// Subject
-		let subject_captures = parse_regex_first_match(&mail.body, r"ご利用店舗 (.+)", 1)?;
+		let subject_captures = parse_regex_first_match(&mail.body, r"ご利用店舗\s+(.+)", 1)?;
 		if subject_captures.is_none() {
 			eprintln!("No subject data found!");
 			return Ok(None);
