@@ -25,11 +25,8 @@ impl EmailParsingScheme for OcbcPaymentNotificationScheme {
 			.to_owned();
 		let amount_string = amount_string.replace(",", "");
 		let amount = amount_string.parse::<u32>()?;
-		let amount = Decimal::from_u32(amount);
-		if amount.is_none() {
-			return Err("Failed to parse amount".into());
-		}
-		let amount = amount.unwrap();
+		let mut amount = Decimal::from_u32(amount).ok_or("Failed to parse amount")?;
+		amount.set_sign_negative(true);
 
 		// Datetime
 		let datetime_captures = parse_regex_first_match(
