@@ -6,6 +6,7 @@ use crate::types::Transaction;
 
 use super::Mail;
 
+pub mod ocbc;
 pub mod rakuten_pay;
 
 pub trait EmailParsingScheme {

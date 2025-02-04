@@ -1,7 +1,10 @@
 use dotenv::dotenv;
 use mail::{
 	cleaner::remove_emails,
-	parsers::{EmailParsingScheme, rakuten_pay::RakutenPayParsingScheme},
+	parsers::{
+		EmailParsingScheme, ocbc::OcbcPaymentNotificationScheme,
+		rakuten_pay::RakutenPayParsingScheme,
+	},
 };
 
 mod mail;
@@ -11,9 +14,14 @@ mod types;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	dotenv().ok();
-	let parsers: Vec<Box<dyn EmailParsingScheme>> = vec![Box::new(RakutenPayParsingScheme {
-		account: String::from("Rakuten Pay"),
-	})];
+	let parsers: Vec<Box<dyn EmailParsingScheme>> = vec![
+		Box::new(RakutenPayParsingScheme {
+			account: String::from("Rakuten Pay"),
+		}),
+		Box::new(OcbcPaymentNotificationScheme {
+			account: String::from("OCBC"),
+		}),
+	];
 
 	let mails = mail::reader::read_emails().await?;
 	let transactions = mail::parsers::parse_emails(mails, &parsers)?;
