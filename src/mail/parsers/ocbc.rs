@@ -15,15 +15,14 @@ impl EmailParsingScheme for OcbcPaymentNotificationScheme {
 			&& mail.subject.contains("Successful Payment to")
 	}
 
-	fn parse(&self, mail: &Mail) -> Result<Option<Transaction>, Box<dyn std::error::Error>> {
+	fn parse(&self, mail: &Mail) -> Result<Transaction, Box<dyn std::error::Error>> {
 		// Amount
 		let amount_captures = parse_regex_first_match(&mail.body, r"IDR\s+([0-9\,]+)", 1)?;
-		if amount_captures.is_none() {
-			eprintln!("No amount data found!");
-			return Ok(None);
-		}
-		let amount_captures = amount_captures.unwrap();
-		let amount_string = amount_captures.first().unwrap().to_owned();
+		let amount_captures = amount_captures.ok_or("No amount data found")?;
+		let amount_string = amount_captures
+			.first()
+			.ok_or("No amount data found")?
+			.to_owned();
 		let amount_string = amount_string.replace(",", "");
 		let amount = amount_string.parse::<u32>()?;
 		let amount = Decimal::from_u32(amount);
@@ -38,12 +37,10 @@ impl EmailParsingScheme for OcbcPaymentNotificationScheme {
 			r#"<b>PAYMENT DATE:<\/b><br\/>\s*<span style="color:#5f5f5f">(.+)\sWIB</span></span>"#,
 			1,
 		)?;
-		if timestamp_captures.is_none() {
-			eprintln!("No timestamp data found!");
-			return Ok(None);
-		}
-		let timestamp_captures = timestamp_captures.unwrap();
-		let timestamp_string = timestamp_captures.first().unwrap();
+		let timestamp_captures = timestamp_captures.ok_or("No timestamp data found")?;
+		let timestamp_string = timestamp_captures
+			.first()
+			.ok_or("No timestamp data found")?;
 		let parsed_timestamp =
 			NaiveDateTime::parse_from_str(&timestamp_string, "%d %b %Y %H:%M:%S")?;
 		let wib_timestamp = chrono_tz::Asia::Jakarta
@@ -54,11 +51,11 @@ impl EmailParsingScheme for OcbcPaymentNotificationScheme {
 		// Subject
 		let subject = mail.subject.trim().replace("Successful Payment to ", "");
 
-		Ok(Some(Transaction {
+		Ok(Transaction {
 			subject: Some(subject),
 			timestamp,
 			amount: amount,
 			account: self.account.clone(),
-		}))
+		})
 	}
 }

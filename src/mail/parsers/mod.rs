@@ -11,7 +11,7 @@ pub mod rakuten_pay;
 
 pub trait EmailParsingScheme {
 	fn can_parse(&self, mail: &Mail) -> bool;
-	fn parse(&self, mail: &Mail) -> Result<Option<Transaction>, Box<dyn std::error::Error>>;
+	fn parse(&self, mail: &Mail) -> Result<Transaction, Box<dyn std::error::Error>>;
 }
 
 pub fn parse_emails(
@@ -25,17 +25,17 @@ pub fn parse_emails(
 			if !parser.can_parse(&mail) {
 				continue;
 			}
-			let transaction = parser.parse(&mail)?;
-			if transaction.is_none() {
-				continue;
+
+			match parser.parse(&mail) {
+				Ok(transaction) => {
+					#[cfg(debug_assertions)]
+					println!("{:#?}", transaction);
+
+					map.insert(mail, transaction);
+					break;
+				}
+				Err(e) => eprintln!("Could not parse mail: {}", e),
 			}
-			let transaction = transaction.unwrap();
-
-			#[cfg(debug_assertions)]
-			println!("{:#?}", transaction);
-
-			map.insert(mail, transaction);
-			break;
 		}
 	}
 

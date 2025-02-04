@@ -14,15 +14,14 @@ impl EmailParsingScheme for RakutenPayParsingScheme {
 		mail.subject.contains("楽天ペイアプリご利用内容確認メール")
 	}
 
-	fn parse(&self, mail: &Mail) -> Result<Option<Transaction>, Box<dyn std::error::Error>> {
+	fn parse(&self, mail: &Mail) -> Result<Transaction, Box<dyn std::error::Error>> {
 		// Amount
 		let amount_captures = parse_regex_first_match(&mail.body, r"決済総額\s+([0-9\,]+)", 1)?;
-		if amount_captures.is_none() {
-			eprintln!("No amount data found!");
-			return Ok(None);
-		}
-		let amount_captures = amount_captures.unwrap();
-		let amount_string = amount_captures.first().unwrap().to_owned();
+		let amount_captures = amount_captures.ok_or("No amount data found")?;
+		let amount_string = amount_captures
+			.first()
+			.ok_or("No amount data found")?
+			.to_owned();
 		let amount_string = amount_string.replace(",", "");
 		let amount = amount_string.parse::<u32>()?;
 		let amount = Decimal::from_u32(amount);
@@ -34,21 +33,17 @@ impl EmailParsingScheme for RakutenPayParsingScheme {
 		// Timestamp
 		let timestamp_captures = parse_regex_first_match(
 			&mail.body,
-			r"ご利用日時\s+([0-9]+)\/([0-9]+)\/([0-9]+)\((.)\) ([0-9]+):([0-9]+)",
-			6,
+			r"ご利用日時\s+([0-9]+)\/([0-9]+)\/([0-9]+)\(.\) ([0-9]+):([0-9]+)",
+			5,
 		)?;
-		if timestamp_captures.is_none() {
-			eprintln!("No timestamp data found!");
-			return Ok(None);
-		}
-		let timestamp_captures = timestamp_captures.unwrap();
+		let timestamp_captures = timestamp_captures.ok_or("No timestamp data found")?;
 		let timestamp_string = String::from(format!(
 			"{}-{}-{} {}:{}:00",
 			timestamp_captures[0],
 			timestamp_captures[1],
 			timestamp_captures[2],
-			timestamp_captures[4],
-			timestamp_captures[5]
+			timestamp_captures[3],
+			timestamp_captures[4]
 		));
 		let parsed_timestamp =
 			NaiveDateTime::parse_from_str(&timestamp_string, "%Y-%m-%d %H:%M:%S")?;
@@ -59,18 +54,14 @@ impl EmailParsingScheme for RakutenPayParsingScheme {
 
 		// Subject
 		let subject_captures = parse_regex_first_match(&mail.body, r"ご利用店舗\s+(.+)", 1)?;
-		if subject_captures.is_none() {
-			eprintln!("No subject data found!");
-			return Ok(None);
-		}
-		let subject_captures = subject_captures.unwrap();
+		let subject_captures = subject_captures.ok_or("No subject data found")?;
 		let subject = subject_captures.first().unwrap().to_owned();
 
-		Ok(Some(Transaction {
+		Ok(Transaction {
 			subject: Some(subject),
 			timestamp,
 			amount: amount,
 			account: self.account.clone(),
-		}))
+		})
 	}
 }
