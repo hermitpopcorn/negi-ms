@@ -11,6 +11,11 @@ pub async fn read_emails() -> Result<Vec<Mail>, Box<dyn std::error::Error>> {
 	let raw_mails = walk_directory(&maildir_path).await?;
 	let parsed_mails = parse_emails(raw_mails);
 
+	#[cfg(debug_assertions)]
+	for mail in &parsed_mails {
+		println!("{:#?}", mail);
+	}
+
 	Ok(parsed_mails)
 }
 

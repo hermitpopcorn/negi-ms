@@ -25,6 +25,19 @@ impl PartialEq for Mail {
 
 impl Eq for Mail {}
 
+impl std::fmt::Debug for Mail {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(
+			f,
+			"------- Mail ------\nFile path: {}\nFrom: {}\nSubject: {}\nBody:\n---- Body Start ---\n{}\n----- Body End ----\n-------------------",
+			self.file_path.to_str().unwrap(),
+			self.from,
+			self.subject,
+			self.body,
+		)
+	}
+}
+
 pub fn get_maildir_new_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
 	let maildir_path_str = env::var("MAILDIR_PATH").expect("MAILDIR_PATH must be set");
 	let maildir_path = PathBuf::from(&maildir_path_str);
