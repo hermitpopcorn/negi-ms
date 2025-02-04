@@ -31,30 +31,30 @@ impl EmailParsingScheme for OcbcPaymentNotificationScheme {
 		}
 		let amount = amount.unwrap();
 
-		// Timestamp
-		let timestamp_captures = parse_regex_first_match(
+		// Datetime
+		let datetime_captures = parse_regex_first_match(
 			&mail.body,
 			r#"<b>PAYMENT DATE:<\/b><br\/>\s*<span style="color:#5f5f5f">(.+)\sWIB</span></span>"#,
 			1,
 		)?;
-		let timestamp_captures = timestamp_captures.ok_or("No timestamp data found")?;
-		let timestamp_string = timestamp_captures
+		let datetime_captures = datetime_captures.ok_or("No datetime data found")?;
+		let datetime_string = datetime_captures
 			.first()
-			.ok_or("No timestamp data found")?;
-		let parsed_timestamp =
-			NaiveDateTime::parse_from_str(&timestamp_string, "%d %b %Y %H:%M:%S")?;
-		let wib_timestamp = chrono_tz::Asia::Jakarta
-			.from_local_datetime(&parsed_timestamp)
+			.ok_or("No datetime data found")?;
+		let parsed_datetime =
+			NaiveDateTime::parse_from_str(&datetime_string, "%d %b %Y %H:%M:%S")?;
+		let wib_datetime = chrono_tz::Asia::Jakarta
+			.from_local_datetime(&parsed_datetime)
 			.unwrap();
-		let timestamp = wib_timestamp.with_timezone(&Utc);
+		let datetime = wib_datetime.with_timezone(&Utc);
 
 		// Subject
 		let subject = mail.subject.trim().replace("Successful Payment to ", "");
 
 		Ok(Transaction {
 			subject: Some(subject),
-			timestamp,
-			amount: amount,
+			datetime,
+			amount,
 			account: self.account.clone(),
 		})
 	}

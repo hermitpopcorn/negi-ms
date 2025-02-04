@@ -25,7 +25,7 @@ pub async fn append_to_sheet(
 			transaction.account.clone(),
 			transaction.subject.clone().unwrap_or("".to_string()),
 			transaction
-				.timestamp
+				.datetime
 				.format("%Y-%m-%d %H:%M:%S")
 				.to_string(),
 			transaction.amount.to_string(),

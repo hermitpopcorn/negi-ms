@@ -30,27 +30,27 @@ impl EmailParsingScheme for RakutenPayParsingScheme {
 		}
 		let amount = amount.unwrap();
 
-		// Timestamp
-		let timestamp_captures = parse_regex_first_match(
+		// Datetime
+		let datetime_captures = parse_regex_first_match(
 			&mail.body,
 			r"ご利用日時\s+([0-9]+)\/([0-9]+)\/([0-9]+)\(.\) ([0-9]+):([0-9]+)",
 			5,
 		)?;
-		let timestamp_captures = timestamp_captures.ok_or("No timestamp data found")?;
-		let timestamp_string = String::from(format!(
+		let datetime_captures = datetime_captures.ok_or("No datetime data found")?;
+		let datetime_string = String::from(format!(
 			"{}-{}-{} {}:{}:00",
-			timestamp_captures[0],
-			timestamp_captures[1],
-			timestamp_captures[2],
-			timestamp_captures[3],
-			timestamp_captures[4]
+			datetime_captures[0],
+			datetime_captures[1],
+			datetime_captures[2],
+			datetime_captures[3],
+			datetime_captures[4]
 		));
-		let parsed_timestamp =
-			NaiveDateTime::parse_from_str(&timestamp_string, "%Y-%m-%d %H:%M:%S")?;
-		let jst_timestamp = chrono_tz::Asia::Tokyo
-			.from_local_datetime(&parsed_timestamp)
+		let parsed_datetime =
+			NaiveDateTime::parse_from_str(&datetime_string, "%Y-%m-%d %H:%M:%S")?;
+		let jst_datetime = chrono_tz::Asia::Tokyo
+			.from_local_datetime(&parsed_datetime)
 			.unwrap();
-		let timestamp = jst_timestamp.with_timezone(&Utc);
+		let datetime = jst_datetime.with_timezone(&Utc);
 
 		// Subject
 		let subject_captures = parse_regex_first_match(&mail.body, r"ご利用店舗\s+(.+)", 1)?;
@@ -59,8 +59,8 @@ impl EmailParsingScheme for RakutenPayParsingScheme {
 
 		Ok(Transaction {
 			subject: Some(subject),
-			timestamp,
-			amount: amount,
+			datetime,
+			amount,
 			account: self.account.clone(),
 		})
 	}
