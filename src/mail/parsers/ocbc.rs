@@ -38,11 +38,8 @@ impl EmailParsingScheme for OcbcPaymentNotificationScheme {
 			1,
 		)?;
 		let datetime_captures = datetime_captures.ok_or("No datetime data found")?;
-		let datetime_string = datetime_captures
-			.first()
-			.ok_or("No datetime data found")?;
-		let parsed_datetime =
-			NaiveDateTime::parse_from_str(&datetime_string, "%d %b %Y %H:%M:%S")?;
+		let datetime_string = datetime_captures.first().ok_or("No datetime data found")?;
+		let parsed_datetime = NaiveDateTime::parse_from_str(&datetime_string, "%d %b %Y %H:%M:%S")?;
 		let wib_datetime = chrono_tz::Asia::Jakarta
 			.from_local_datetime(&parsed_datetime)
 			.unwrap();

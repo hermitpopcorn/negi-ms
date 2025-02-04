@@ -9,7 +9,7 @@ pub async fn read_emails() -> Result<Vec<Mail>, Box<dyn std::error::Error>> {
 	let maildir_path: Vec<PathBuf> = vec![get_maildir_new_path()?, get_maildir_cur_path()?];
 
 	let raw_mails = walk_directory(&maildir_path).await?;
-	let parsed_mails = parse_emails(raw_mails);
+	let parsed_mails = parse_raw_emails(raw_mails);
 
 	#[cfg(debug_assertions)]
 	for mail in &parsed_mails {
@@ -42,7 +42,7 @@ async fn walk_directory(
 	Ok(raw_mails)
 }
 
-pub fn parse_emails(mails: Vec<RawMail>) -> Vec<Mail> {
+fn parse_raw_emails(mails: Vec<RawMail>) -> Vec<Mail> {
 	mails
 		.into_iter()
 		.filter_map(|raw_mail| {

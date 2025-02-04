@@ -32,7 +32,7 @@ pub fn parse_emails(
 					println!("{:#?}", transaction);
 
 					map.insert(mail, transaction);
-					break;
+					break; // Break after first parse success
 				}
 				Err(e) => eprintln!("Could not parse mail: {}", e),
 			}

@@ -44,7 +44,7 @@ pub fn get_maildir_new_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
 	let maildir_path = maildir_path.join("new");
 
 	if !maildir_path.exists() {
-		return Err("Maildir path(s) do not exist.".into());
+		return Err("Maildir path(s) do not exist".into());
 	}
 
 	Ok(maildir_path)
@@ -56,7 +56,7 @@ pub fn get_maildir_cur_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
 	let maildir_path = maildir_path.join("cur");
 
 	if !maildir_path.exists() {
-		return Err("Maildir path(s) do not exist.".into());
+		return Err("Maildir path(s) do not exist".into());
 	}
 
 	Ok(maildir_path)

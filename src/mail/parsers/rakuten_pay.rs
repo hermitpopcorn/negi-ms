@@ -45,8 +45,7 @@ impl EmailParsingScheme for RakutenPayParsingScheme {
 			datetime_captures[3],
 			datetime_captures[4]
 		));
-		let parsed_datetime =
-			NaiveDateTime::parse_from_str(&datetime_string, "%Y-%m-%d %H:%M:%S")?;
+		let parsed_datetime = NaiveDateTime::parse_from_str(&datetime_string, "%Y-%m-%d %H:%M:%S")?;
 		let jst_datetime = chrono_tz::Asia::Tokyo
 			.from_local_datetime(&parsed_datetime)
 			.unwrap();
