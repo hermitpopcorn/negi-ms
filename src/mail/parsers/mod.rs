@@ -11,13 +11,13 @@ pub mod rakuten_pay;
 
 pub trait EmailParsingScheme {
 	fn can_parse(&self, mail: &Mail) -> bool;
-	fn parse(&self, mail: &Mail) -> Result<Transaction, Box<dyn std::error::Error>>;
+	fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, Box<dyn std::error::Error>>;
 }
 
 pub fn parse_emails(
 	mails: Vec<Mail>,
 	parsers: &Vec<Box<dyn EmailParsingScheme>>,
-) -> Result<HashMap<Mail, Transaction>, Box<dyn std::error::Error>> {
+) -> Result<HashMap<Mail, Vec<Transaction>>, Box<dyn std::error::Error>> {
 	let mut map = HashMap::new();
 
 	for mail in mails {
@@ -27,11 +27,11 @@ pub fn parse_emails(
 			}
 
 			match parser.parse(&mail) {
-				Ok(transaction) => {
+				Ok(transactions) => {
 					#[cfg(debug_assertions)]
-					println!("{:#?}", transaction);
+					println!("{:#?}", transactions);
 
-					map.insert(mail, transaction);
+					map.insert(mail, transactions);
 					break; // Break after first parse success
 				}
 				Err(e) => eprintln!("Could not parse mail: {}", e),

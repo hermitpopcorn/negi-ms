@@ -6,8 +6,8 @@ use crate::{mail::Mail, sheet::ValueRange, types::Transaction};
 
 pub async fn append_to_sheet(
 	client: &Client,
-	transactions: HashMap<Mail, Transaction>,
-) -> Result<HashMap<Mail, Transaction>, Box<dyn std::error::Error>> {
+	mail_parsed_transactions: HashMap<Mail, Vec<Transaction>>,
+) -> Result<HashMap<Mail, Vec<Transaction>>, Box<dyn std::error::Error>> {
 	let spreadsheet_id = env::var("SPREADSHEET_ID")?;
 	let range = "Transactions!A:D";
 	let url = format!(
@@ -20,14 +20,16 @@ pub async fn append_to_sheet(
 		values: vec![],
 	};
 
-	for transaction in transactions.values() {
-		let row = vec![
-			transaction.account.clone(),
-			transaction.subject.clone().unwrap_or("".to_string()),
-			transaction.datetime.format("%Y-%m-%d %H:%M:%S").to_string(),
-			transaction.amount.to_string(),
-		];
-		value_range.values.push(row);
+	for mail_parsed_transaction in mail_parsed_transactions.values() {
+		for transaction in mail_parsed_transaction {
+			let row = vec![
+				transaction.account.clone(),
+				transaction.subject.clone().unwrap_or("".to_string()),
+				transaction.datetime.format("%Y-%m-%d %H:%M:%S").to_string(),
+				transaction.amount.to_string(),
+			];
+			value_range.values.push(row);
+		}
 	}
 
 	let response = client
@@ -37,7 +39,7 @@ pub async fn append_to_sheet(
 		.await?;
 
 	match response.error_for_status_ref() {
-		Ok(_) => return Ok(transactions),
+		Ok(_) => return Ok(mail_parsed_transactions),
 		Err(e) => return Err(e.into()),
 	}
 }

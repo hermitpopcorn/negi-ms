@@ -14,7 +14,7 @@ impl EmailParsingScheme for RakutenPayParsingScheme {
 		mail.subject.contains("楽天ペイアプリご利用内容確認メール")
 	}
 
-	fn parse(&self, mail: &Mail) -> Result<Transaction, Box<dyn std::error::Error>> {
+	fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, Box<dyn std::error::Error>> {
 		// Amount
 		let amount_captures = parse_regex_first_match(&mail.body, r"決済総額\s+([0-9\,]+)", 1)?;
 		let amount_captures = amount_captures.ok_or("No amount data found")?;
@@ -53,11 +53,11 @@ impl EmailParsingScheme for RakutenPayParsingScheme {
 		let subject_captures = subject_captures.ok_or("No subject data found")?;
 		let subject = subject_captures.first().unwrap().to_owned();
 
-		Ok(Transaction {
+		Ok(vec![Transaction {
 			subject: Some(subject),
 			datetime,
 			amount,
 			account: self.account.clone(),
-		})
+		}])
 	}
 }
