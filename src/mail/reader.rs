@@ -72,6 +72,10 @@ fn parse_raw_emails(mails: Vec<RawMail>) -> Vec<Mail> {
 						let decoded = b.get_decoded_as_string().unwrap_or(String::from(""));
 						body.push_str(decoded.as_str());
 					}
+					Body::SevenBit(b) | Body::EightBit(b) => {
+						let decoded = b.get_as_string().unwrap_or(String::from(""));
+						body.push_str(decoded.as_str());
+					}
 					_ => {}
 				}
 			}
