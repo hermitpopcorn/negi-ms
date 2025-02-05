@@ -3,7 +3,7 @@ use mail::{
 	cleaner::remove_emails,
 	parsers::{
 		EmailParsingScheme, ocbc::OcbcPaymentNotificationScheme,
-		rakuten_pay::RakutenPayParsingScheme,
+		rakuten_card::RakutenCardParsingScheme, rakuten_pay::RakutenPayParsingScheme,
 	},
 };
 
@@ -16,7 +16,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	dotenv().ok();
 	let parsers: Vec<Box<dyn EmailParsingScheme>> = vec![
 		Box::new(RakutenPayParsingScheme {
-			account: String::from("Rakuten Pay"),
+			account: String::from("Rakuten"),
+		}),
+		Box::new(RakutenCardParsingScheme {
+			account: String::from("Rakuten"),
 		}),
 		Box::new(OcbcPaymentNotificationScheme {
 			account: String::from("OCBC"),
