@@ -57,9 +57,9 @@ fn parse_raw_emails(mails: Vec<RawMail>) -> Vec<Mail> {
 			let mut from = String::from("");
 			let headers = parsed.get_headers();
 			for header in headers {
-				if header.get_key() == "Subject" {
+				if header.get_key().to_lowercase() == "subject" {
 					subject = String::from(header.get_value());
-				} else if header.get_key() == "From" {
+				} else if header.get_key().to_lowercase() == "from" {
 					from = String::from(header.get_value());
 				}
 			}
