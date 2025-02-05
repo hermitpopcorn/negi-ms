@@ -1,13 +1,13 @@
-use std::{collections::HashMap, env};
+use std::env;
 
 use reqwest::Client;
 
-use crate::{mail::Mail, sheet::ValueRange, types::Transaction};
+use crate::{sheet::ValueRange, types::TransactionsParsedFromMail};
 
 pub async fn append_to_sheet(
 	client: &Client,
-	mail_parsed_transactions: HashMap<Mail, Vec<Transaction>>,
-) -> Result<HashMap<Mail, Vec<Transaction>>, Box<dyn std::error::Error>> {
+	mail_parsed_transactions: TransactionsParsedFromMail,
+) -> Result<TransactionsParsedFromMail, Box<dyn std::error::Error>> {
 	let spreadsheet_id = env::var("SPREADSHEET_ID")?;
 	let range = "Transactions!A:D";
 	let url = format!(

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use regex::Regex;
 
-use crate::types::Transaction;
+use crate::types::{Transaction, TransactionsParsedFromMail};
 
 use super::Mail;
 
@@ -17,7 +17,7 @@ pub trait EmailParsingScheme {
 pub fn parse_emails(
 	mails: Vec<Mail>,
 	parsers: &Vec<Box<dyn EmailParsingScheme>>,
-) -> Result<HashMap<Mail, Vec<Transaction>>, Box<dyn std::error::Error>> {
+) -> Result<TransactionsParsedFromMail, Box<dyn std::error::Error>> {
 	let mut map = HashMap::new();
 
 	for mail in mails {

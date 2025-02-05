@@ -1,3 +1,7 @@
+use std::collections::HashMap;
+
+use crate::mail::Mail;
+
 pub struct Transaction {
 	pub subject: Option<String>,
 	pub datetime: chrono::DateTime<chrono::Utc>,
@@ -17,3 +21,5 @@ impl std::fmt::Debug for Transaction {
 		)
 	}
 }
+
+pub type TransactionsParsedFromMail = HashMap<Mail, Vec<Transaction>>;
