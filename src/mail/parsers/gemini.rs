@@ -112,9 +112,7 @@ impl EmailParsingScheme for GeminiParsingScheme {
 
 		let response = client.post(&url).json(&body).send().await?;
 		let response_json = response.json::<ResponseFormat>().await?;
-		println!("Response JSON: {:#?}", response_json);
 		let transactions = response_json.candidates[0].content.parts[0].text.clone();
-		println!("Just the text: {}", transactions);
 		let transactions = serde_json::from_str::<Vec<Transaction>>(&transactions)?;
 
 		if transactions.is_empty() {

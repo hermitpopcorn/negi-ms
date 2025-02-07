@@ -15,6 +15,9 @@ mod types;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	dotenv().ok();
 	let parsers: Vec<Box<dyn EmailParsingScheme>> = vec![
+		Box::new(GeminiParsingScheme {
+			accounts: vec!["Rakuten", "OCBC", "BCA", "Jenius"],
+		}),
 		Box::new(RakutenPayParsingScheme {
 			account: String::from("Rakuten"),
 		}),

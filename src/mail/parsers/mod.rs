@@ -6,6 +6,7 @@ use crate::types::{Transaction, TransactionsParsedFromMail};
 
 use super::Mail;
 
+pub mod gemini;
 pub mod ocbc;
 pub mod rakuten_card;
 pub mod rakuten_pay;
