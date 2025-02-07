@@ -1,7 +1,10 @@
 use std::collections::HashMap;
 
+use serde::Deserialize;
+
 use crate::mail::Mail;
 
+#[derive(Deserialize)]
 pub struct Transaction {
 	pub subject: Option<String>,
 	pub datetime: chrono::DateTime<chrono::Utc>,

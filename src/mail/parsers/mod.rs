@@ -10,12 +10,13 @@ pub mod ocbc;
 pub mod rakuten_card;
 pub mod rakuten_pay;
 
+#[async_trait::async_trait]
 pub trait EmailParsingScheme {
 	fn can_parse(&self, mail: &Mail) -> bool;
-	fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, Box<dyn std::error::Error>>;
+	async fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, Box<dyn std::error::Error>>;
 }
 
-pub fn parse_emails(
+pub async fn parse_emails(
 	mails: Vec<Mail>,
 	parsers: &Vec<Box<dyn EmailParsingScheme>>,
 ) -> Result<TransactionsParsedFromMail, Box<dyn std::error::Error>> {
@@ -27,7 +28,7 @@ pub fn parse_emails(
 				continue;
 			}
 
-			match parser.parse(&mail) {
+			match parser.parse(&mail).await {
 				Ok(transactions) => {
 					#[cfg(debug_assertions)]
 					println!("{:#?}", transactions);

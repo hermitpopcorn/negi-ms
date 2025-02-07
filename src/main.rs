@@ -2,7 +2,7 @@ use dotenv::dotenv;
 use mail::{
 	cleaner::remove_emails,
 	parsers::{
-		EmailParsingScheme, ocbc::OcbcPaymentNotificationScheme,
+		EmailParsingScheme, gemini::GeminiParsingScheme, ocbc::OcbcPaymentNotificationScheme,
 		rakuten_card::RakutenCardParsingScheme, rakuten_pay::RakutenPayParsingScheme,
 	},
 };
@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	];
 
 	let mails = mail::reader::read_emails().await?;
-	let transactions = mail::parsers::parse_emails(mails, &parsers)?;
+	let transactions = mail::parsers::parse_emails(mails, &parsers).await?;
 
 	let client = sheet::auth::get_sheets_client().await?;
 	let inserted_transactions = sheet::write::append_to_sheet(&client, transactions).await?;

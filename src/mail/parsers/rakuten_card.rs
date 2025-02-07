@@ -27,13 +27,14 @@ impl RakutenCardParsingScheme {
 	}
 }
 
+#[async_trait::async_trait]
 impl EmailParsingScheme for RakutenCardParsingScheme {
 	fn can_parse(&self, mail: &Mail) -> bool {
 		mail.subject.contains("カード利用のお知らせ")
 			&& mail.from.contains("info@mail.rakuten-card.co.jp")
 	}
 
-	fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, Box<dyn std::error::Error>> {
+	async fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, Box<dyn std::error::Error>> {
 		let mut transactions = vec![];
 
 		let regex = Regex::new(

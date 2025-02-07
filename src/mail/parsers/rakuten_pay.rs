@@ -9,12 +9,13 @@ pub struct RakutenPayParsingScheme {
 	pub account: String,
 }
 
+#[async_trait::async_trait]
 impl EmailParsingScheme for RakutenPayParsingScheme {
 	fn can_parse(&self, mail: &Mail) -> bool {
 		mail.subject.contains("楽天ペイアプリご利用内容確認メール")
 	}
 
-	fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, Box<dyn std::error::Error>> {
+	async fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, Box<dyn std::error::Error>> {
 		// Amount
 		let amount_captures = parse_regex_first_match(&mail.body, r"決済総額\s+([0-9\,]+)", 1)?;
 		let amount_captures = amount_captures.ok_or("No amount data found")?;
