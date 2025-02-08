@@ -17,6 +17,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let parsers: Vec<Box<dyn EmailParsingScheme>> = vec![
 		Box::new(GeminiParsingScheme {
 			accounts: vec!["Rakuten", "OCBC", "BCA", "Jenius"],
+			skips: vec![
+				"デイリーヤマザキアプ",
+				"ローソンアプリ",
+				"ファミリーマートアプ",
+			],
 		}),
 		Box::new(RakutenPayParsingScheme {
 			account: String::from("Rakuten"),

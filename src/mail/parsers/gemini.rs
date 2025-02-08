@@ -12,6 +12,7 @@ use super::{EmailParsingScheme, Transaction};
 
 pub struct GeminiParsingScheme {
 	pub accounts: Vec<&'static str>,
+	pub skips: Vec<&'static str>,
 }
 
 impl GeminiParsingScheme {
@@ -52,13 +53,21 @@ impl GeminiParsingScheme {
 		}
 		accounts_str.pop();
 
+		let mut skips_str = String::new();
+		for skip in &self.skips {
+			skips_str.push_str(&format!("'{}',", *skip));
+		}
+		skips_str.pop();
+
 		format!(
 			"Parse the following email contents and give me the time of purchase, where/what I purchased, when the purchase happened
 			(in UTC time, RFC 3339 format), and how much money I spent (make it negative). Format your result in JSON,
 			just as I specified in the generation config's schema. For account, choose one that fits best the email from this list: {}.
+			Skip an entry if it has a subject or place of purchase that contains any of this: {}.
 			Return an empty array if you can't parse the email or can't choose a suitable account from the list.
 			This is the email: {}",
 			accounts_str,
+			skips_str,
 			mail.body,
 		)
 	}
