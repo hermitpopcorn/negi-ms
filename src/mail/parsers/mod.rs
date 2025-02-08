@@ -1,5 +1,9 @@
 use std::collections::HashMap;
 
+#[cfg(debug_assertions)]
+use log::debug;
+
+use log::{error, info};
 use regex::Regex;
 
 use crate::types::{Transaction, TransactionsParsedFromMail};
@@ -32,12 +36,17 @@ pub async fn parse_emails(
 			match parser.parse(&mail).await {
 				Ok(transactions) => {
 					#[cfg(debug_assertions)]
-					println!("{:#?}", transactions);
+					debug!("{:#?}", transactions);
 
+					info!(
+						"Mail: [{}]. Parsed {} transactions.",
+						mail.subject,
+						transactions.len()
+					);
 					map.insert(mail, transactions);
 					break; // Break after first parse success
 				}
-				Err(e) => eprintln!("Could not parse mail: {}", e),
+				Err(e) => error!("Mail: [{}]. Could not parse mail: {}", mail.subject, e),
 			}
 		}
 	}

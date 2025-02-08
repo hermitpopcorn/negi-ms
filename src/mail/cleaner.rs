@@ -17,7 +17,8 @@ pub async fn remove_emails(mails: Vec<Mail>) -> Result<(), Box<dyn std::error::E
 
 #[cfg(debug_assertions)]
 async fn remove_file(_: &Path) -> Result<(), Box<dyn std::error::Error>> {
-	println!("Not actually deleting file.");
+	use log::debug;
+	debug!("Not actually deleting file");
 	Ok(())
 }
 

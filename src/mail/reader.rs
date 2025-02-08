@@ -1,5 +1,9 @@
 use std::path::PathBuf;
 
+#[cfg(debug_assertions)]
+use log::debug;
+
+use log::info;
 use mailparse::{ParsedMail, body::Body, parse_mail};
 use tokio::fs;
 
@@ -11,9 +15,11 @@ pub async fn read_emails() -> Result<Vec<Mail>, Box<dyn std::error::Error>> {
 	let raw_mails = walk_directory(&maildir_path).await?;
 	let parsed_mails = parse_raw_emails(raw_mails);
 
+	info!("{} emails found", parsed_mails.len());
+
 	#[cfg(debug_assertions)]
 	for mail in &parsed_mails {
-		println!("{:#?}", mail);
+		debug!("{:#?}", mail);
 	}
 
 	Ok(parsed_mails)
