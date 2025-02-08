@@ -61,8 +61,12 @@ impl GeminiParsingScheme {
 
 		format!(
 			"Parse the following email contents and give me the time of purchase, where/what I purchased, when the purchase happened
-			(in UTC time, RFC 3339 format), and how much money I spent (make it negative). Format your result in JSON,
-			just as I specified in the generation config's schema. For account, choose one that fits best the email from this list: {}.
+			(in UTC time, RFC 3339 format), and how much money I spent (make it negative).
+			Format your result in JSON, just as I specified in the generation config's schema.
+			Do not fill subject with the subject of the email, fill it using the name of item I purchased or where I purchased it at.
+			If the email is in Japanese and has no purchase time specified, assume it's 12:00:00 AM JST.
+			If the email is in Indonesian or English and has no purchase time specified, assume it's 12:00:00 AM WIB.
+			For account, choose one that fits best the email from this list: {}.
 			Skip an entry if it has a subject or place of purchase that contains any of this: {}.
 			Return an empty array if you can't parse the email or can't choose a suitable account from the list.
 			This is the email: {}",
