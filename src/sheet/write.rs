@@ -2,12 +2,12 @@ use std::env;
 
 use reqwest::Client;
 
-use crate::{sheet::ValueRange, types::TransactionsParsedFromMail};
+use crate::{sheet::ValueRange, transaction::Transaction};
 
 pub async fn append_to_sheet(
 	client: &Client,
-	mail_parsed_transactions: TransactionsParsedFromMail,
-) -> Result<TransactionsParsedFromMail, Box<dyn std::error::Error>> {
+	transactions: Vec<Transaction>,
+) -> Result<(), Box<dyn std::error::Error>> {
 	let spreadsheet_id = env::var("SPREADSHEET_ID")?;
 	let range = "Transactions!A:D";
 	let url = format!(
@@ -20,16 +20,14 @@ pub async fn append_to_sheet(
 		values: vec![],
 	};
 
-	for mail_parsed_transaction in mail_parsed_transactions.values() {
-		for transaction in mail_parsed_transaction {
-			let row = vec![
-				transaction.account.clone(),
-				transaction.subject.clone().unwrap_or("".to_string()),
-				transaction.datetime.format("%Y-%m-%d %H:%M:%S").to_string(),
-				transaction.amount.to_string(),
-			];
-			value_range.values.push(row);
-		}
+	for transaction in transactions {
+		let row = vec![
+			transaction.account.clone(),
+			transaction.subject.clone().unwrap_or("".to_string()),
+			transaction.datetime.format("%Y-%m-%d %H:%M:%S").to_string(),
+			transaction.amount.to_string(),
+		];
+		value_range.values.push(row);
 	}
 
 	let response = client
@@ -39,7 +37,7 @@ pub async fn append_to_sheet(
 		.await?;
 
 	match response.error_for_status_ref() {
-		Ok(_) => return Ok(mail_parsed_transactions),
+		Ok(_) => return Ok(()),
 		Err(e) => return Err(e.into()),
 	}
 }

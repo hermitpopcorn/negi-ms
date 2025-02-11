@@ -6,9 +6,9 @@ use log::debug;
 use log::{error, info};
 use regex::Regex;
 
-use crate::types::{Transaction, TransactionsParsedFromMail};
+use crate::transaction::Transaction;
 
-use super::Mail;
+use super::{Mail, TransactionsParsedFromMail};
 
 pub mod gemini;
 pub mod ocbc;
@@ -28,7 +28,7 @@ pub async fn parse_emails(
 	let mut map = HashMap::new();
 
 	for mail in mails {
-		for parser in parsers {
+		'parserloop: for parser in parsers {
 			if !parser.can_parse(&mail) {
 				continue;
 			}
@@ -36,15 +36,15 @@ pub async fn parse_emails(
 			match parser.parse(&mail).await {
 				Ok(transactions) => {
 					#[cfg(debug_assertions)]
-					debug!("{:#?}", transactions);
+					debug!("Transactions: {:#?}", transactions);
 
 					info!(
-						"Mail: [{}]. Parsed {} transactions.",
+						"Mail: [{}]. Parsed {} transactions",
 						mail.subject,
 						transactions.len()
 					);
 					map.insert(mail, transactions);
-					break; // Break after first parse success
+					break 'parserloop; // Break after first parse success
 				}
 				Err(e) => error!("Mail: [{}]. Could not parse mail: {}", mail.subject, e),
 			}

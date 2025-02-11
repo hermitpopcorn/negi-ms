@@ -1,6 +1,5 @@
 use std::env;
 
-use log::debug;
 use reqwest::{
 	Client,
 	header::{self, CONTENT_TYPE},
@@ -131,7 +130,10 @@ impl<'a> EmailParsingScheme for GeminiParsingScheme<'a> {
 		let response_text = response.text().await?;
 
 		#[cfg(debug_assertions)]
-		debug!("Gemini response: {}", response_text);
+		{
+			use log::debug;
+			debug!("Gemini response: {}", response_text);
+		}
 
 		let response_json = serde_json::from_str::<ResponseFormat>(&response_text)?;
 		let transactions = response_json.candidates[0].content.parts[0].text.clone();

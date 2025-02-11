@@ -2,17 +2,19 @@ use ::log::info;
 use dotenv::dotenv;
 use log::setup_logger;
 use mail::{
+	Mail,
 	cleaner::remove_emails,
 	parsers::{
 		EmailParsingScheme, gemini::GeminiParsingScheme, ocbc::OcbcPaymentNotificationScheme,
 		rakuten_card::RakutenCardParsingScheme, rakuten_pay::RakutenPayParsingScheme,
 	},
 };
+use transaction::Transaction;
 
 mod log;
 mod mail;
 mod sheet;
-mod types;
+mod transaction;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -48,10 +50,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		return Ok(());
 	}
 
-	let client = sheet::auth::get_sheets_client().await?;
-	let inserted_transactions = sheet::write::append_to_sheet(&client, transactions).await?;
+	let mails = transactions
+		.keys()
+		.map(|m| m.clone_without_body())
+		.collect::<Vec<Mail>>();
+	let transactions = transactions
+		.into_values()
+		.flatten()
+		.collect::<Vec<Transaction>>();
 
-	remove_emails(inserted_transactions.into_keys().collect()).await?;
+	let client = sheet::auth::get_sheets_client().await?;
+	sheet::write::append_to_sheet(&client, transactions).await?;
+
+	remove_emails(mails).await?;
 
 	Ok(())
 }

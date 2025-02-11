@@ -1,4 +1,6 @@
-use std::{env, path::PathBuf};
+use std::{collections::HashMap, env, path::PathBuf};
+
+use crate::transaction::Transaction;
 
 pub mod cleaner;
 pub mod parsers;
@@ -15,6 +17,17 @@ pub struct Mail {
 	pub from: String,
 	pub subject: String,
 	pub body: String,
+}
+
+impl Mail {
+	pub fn clone_without_body(&self) -> Self {
+		Self {
+			file_path: self.file_path.clone(),
+			from: self.from.clone(),
+			subject: self.subject.clone(),
+			body: String::new(),
+		}
+	}
 }
 
 impl PartialEq for Mail {
@@ -37,6 +50,8 @@ impl std::fmt::Debug for Mail {
 		)
 	}
 }
+
+pub type TransactionsParsedFromMail = HashMap<Mail, Vec<Transaction>>;
 
 pub fn get_maildir_new_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
 	let maildir_path_str = env::var("MAILDIR_PATH").expect("MAILDIR_PATH must be set");
