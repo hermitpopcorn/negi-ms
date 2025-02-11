@@ -1,5 +1,6 @@
 use std::env;
 
+use log::debug;
 use reqwest::{
 	Client,
 	header::{self, CONTENT_TYPE},
@@ -10,12 +11,13 @@ use crate::mail::Mail;
 
 use super::{EmailParsingScheme, Transaction};
 
-pub struct GeminiParsingScheme {
-	pub accounts: Vec<&'static str>,
-	pub skips: Vec<&'static str>,
+pub struct GeminiParsingScheme<'a> {
+	pub model: &'a str,
+	pub accounts: Vec<&'a str>,
+	pub skips: Vec<&'a str>,
 }
 
-impl GeminiParsingScheme {
+impl<'a> GeminiParsingScheme<'a> {
 	fn build_client(&self) -> Result<Client, Box<dyn std::error::Error>> {
 		let mut headers = header::HeaderMap::new();
 
@@ -63,6 +65,7 @@ impl GeminiParsingScheme {
 			"Parse the following email contents and give me the time of purchase, where/what I purchased, when the purchase happened
 			(in UTC time, RFC 3339 format), and how much money I spent (make it negative).
 			Format your result in JSON, just as I specified in the generation config's schema.
+			Make the items independent, do not create some sort of header object and do not make an item if it does not have an amount or a purchase date.
 			Do not fill subject with the subject of the email, fill it using the name of item I purchased or where I purchased it at.
 			If the email is in Japanese and has no purchase time specified, assume it's 12:00:00 AM JST.
 			If the email is in Indonesian or English and has no purchase time specified, assume it's 12:00:00 AM WIB.
@@ -107,7 +110,7 @@ struct Part {
 }
 
 #[async_trait::async_trait]
-impl EmailParsingScheme for GeminiParsingScheme {
+impl<'a> EmailParsingScheme for GeminiParsingScheme<'a> {
 	fn can_parse(&self, _: &Mail) -> bool {
 		true // Should be able to parse anything
 	}
@@ -115,7 +118,8 @@ impl EmailParsingScheme for GeminiParsingScheme {
 	async fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, Box<dyn std::error::Error>> {
 		let client = self.build_client()?;
 		let url = format!(
-			"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-preview-02-05:generateContent?key={}",
+			"https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
+			self.model,
 			env::var("GEMINI_API_KEY")?,
 		);
 
@@ -124,7 +128,12 @@ impl EmailParsingScheme for GeminiParsingScheme {
 		let body = self.make_body(generation_config, prompt);
 
 		let response = client.post(&url).json(&body).send().await?;
-		let response_json = response.json::<ResponseFormat>().await?;
+		let response_text = response.text().await?;
+
+		#[cfg(debug_assertions)]
+		debug!("Gemini response: {}", response_text);
+
+		let response_json = serde_json::from_str::<ResponseFormat>(&response_text)?;
 		let transactions = response_json.candidates[0].content.parts[0].text.clone();
 		let transactions = serde_json::from_str::<Vec<Transaction>>(&transactions)?;
 

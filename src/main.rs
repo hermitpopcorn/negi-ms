@@ -19,6 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	dotenv().ok();
 	let parsers: Vec<Box<dyn EmailParsingScheme>> = vec![
 		Box::new(GeminiParsingScheme {
+			model: "gemini-2.0-flash",
 			accounts: vec!["Rakuten", "OCBC", "BCA", "Jenius"],
 			skips: vec![
 				"デイリーヤマザキアプ",
