@@ -1,7 +1,9 @@
 use ::log::info;
 use dotenv::dotenv;
-use log::setup_logger;
-use mail::{
+use negi::log::setup_logger;
+use negi::mail::parsers::parse_emails;
+use negi::mail::reader::read_emails;
+use negi::mail::{
 	Mail,
 	cleaner::remove_emails,
 	parsers::{
@@ -9,12 +11,9 @@ use mail::{
 		rakuten_card::RakutenCardParsingScheme, rakuten_pay::RakutenPayParsingScheme,
 	},
 };
-use transaction::Transaction;
-
-mod log;
-mod mail;
-mod sheet;
-mod transaction;
+use negi::sheet::auth::get_sheets_client;
+use negi::sheet::write::append_to_sheet;
+use negi::transaction::Transaction;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -42,8 +41,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	setup_logger();
 
-	let mails = mail::reader::read_emails().await?;
-	let transactions = mail::parsers::parse_emails(mails, &parsers).await?;
+	let mails = read_emails().await?;
+	let transactions = parse_emails(mails, &parsers).await?;
 
 	if transactions.values().map(|t| t.len()).sum::<usize>() < 1 {
 		info!("No transactions found. Exiting early");
@@ -59,8 +58,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		.flatten()
 		.collect::<Vec<Transaction>>();
 
-	let client = sheet::auth::get_sheets_client().await?;
-	sheet::write::append_to_sheet(&client, transactions).await?;
+	let client = get_sheets_client().await?;
+	append_to_sheet(&client, transactions).await?;
 
 	remove_emails(mails).await?;
 

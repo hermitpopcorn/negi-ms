@@ -11,4 +11,4 @@ build:
 	cargo build --release
 
 install: build
-	cp -v target/release/negi {{install_target}}
+	cp -v target/release/watcher {{install_target}}
