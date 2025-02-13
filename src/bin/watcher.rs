@@ -26,6 +26,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 				"デイリーヤマザキアプ",
 				"ローソンアプリ",
 				"ファミリーマートアプ",
+				"楽天ペイアプリセブン",
 			],
 		}),
 		Box::new(RakutenPayParsingScheme {
