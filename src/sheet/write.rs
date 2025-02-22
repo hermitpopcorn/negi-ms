@@ -22,8 +22,8 @@ pub async fn append_to_sheet(
 
 	for transaction in transactions {
 		let row = vec![
-			transaction.account.clone(),
-			transaction.subject.clone().unwrap_or("".to_string()),
+			transaction.account.trim().to_string(),
+			transaction.subject.unwrap_or("".to_string()).trim().to_string(),
 			transaction.datetime.format("%Y-%m-%d %H:%M:%S").to_string(),
 			transaction.amount.to_string(),
 		];
