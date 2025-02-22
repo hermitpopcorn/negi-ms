@@ -73,7 +73,9 @@ fn find_possible_duplicates(map: &GroupedMap) -> Vec<ValueRow> {
 	for group in map.values() {
 		let mut i = 0;
 		while i < group.len().saturating_sub(1) {
-			if (group[i + 1].date_value - group[i].date_value).abs() <= 1.0 && group[i + 1].account.trim() == group[i].account.trim() {
+			if (group[i + 1].date_value - group[i].date_value).abs() <= 1.0
+				&& group[i + 1].account.trim() == group[i].account.trim()
+			{
 				let mut cloned_duplicate = group[i + 1].clone();
 				let mut original_subject = cloned_duplicate.subject;
 				if original_subject.len() > 0 {
