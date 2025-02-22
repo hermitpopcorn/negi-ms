@@ -1,8 +1,11 @@
 use std::env;
 
+use log::error;
 use reqwest::Client;
 
 use crate::{sheet::ValueRange, transaction::Transaction};
+
+use super::ValueRow;
 
 pub async fn append_to_sheet(
 	client: &Client,
@@ -23,7 +26,11 @@ pub async fn append_to_sheet(
 	for transaction in transactions {
 		let row = vec![
 			transaction.account.trim().to_string(),
-			transaction.subject.unwrap_or("".to_string()).trim().to_string(),
+			transaction
+				.subject
+				.unwrap_or("".to_string())
+				.trim()
+				.to_string(),
 			transaction.datetime.format("%Y-%m-%d %H:%M:%S").to_string(),
 			transaction.amount.to_string(),
 		];
@@ -39,5 +46,99 @@ pub async fn append_to_sheet(
 	match response.error_for_status_ref() {
 		Ok(_) => return Ok(()),
 		Err(e) => return Err(e.into()),
+	}
+}
+
+pub async fn mark_duplicates(
+	client: &Client,
+	rows: Vec<ValueRow>,
+) -> Result<(), Box<dyn std::error::Error>> {
+	let spreadsheet_id = env::var("SPREADSHEET_ID")?;
+
+	let mut successful_updates = 0;
+	let total_rows = rows.len();
+
+	for row in rows {
+		let make_url = |range: &str| -> String {
+			format!(
+				"https://sheets.googleapis.com/v4/spreadsheets/{}/values/{}?valueInputOption=USER_ENTERED&includeValuesInResponse=0",
+				spreadsheet_id, range
+			)
+		};
+
+		let write_subject = {
+			let range = format!("Transactions!B{}:B{}", row.row_number, row.row_number);
+			let url = make_url(&range);
+			let value_range = ValueRange {
+				range,
+				values: vec![vec![row.subject]],
+			};
+
+			let response = client
+				.put(&url)
+				.body(serde_json::to_string(&value_range)?)
+				.send()
+				.await?;
+
+			response.error_for_status()
+		};
+
+		if write_subject.is_err() {
+			error!(
+				"Could not update subject for row {}. Error: {}",
+				row.row_number,
+				write_subject.unwrap_err()
+			);
+			continue;
+		}
+
+		let write_amount = {
+			let range = format!("Transactions!D{}:D{}", row.row_number, row.row_number);
+			let url = make_url(&range);
+			let value_range = ValueRange {
+				range,
+				values: vec![vec!["0".to_string()]],
+			};
+
+			let response = client
+				.put(&url)
+				.body(serde_json::to_string(&value_range)?)
+				.send()
+				.await?;
+
+			response.error_for_status()
+		};
+
+		if write_amount.is_err() {
+			error!(
+				"Could not update amount for row {}. Error: {}",
+				row.row_number,
+				write_amount.unwrap_err()
+			);
+			continue;
+		}
+
+		successful_updates += 1;
+	}
+
+	#[cfg(debug_assertions)]
+	{
+		use log::debug;
+		debug!(
+			"Updated rows: {}, total rows: {}",
+			successful_updates, total_rows
+		);
+	}
+
+	match successful_updates == total_rows {
+		true => return Ok(()),
+		false => {
+			return Err(format!(
+				"Failed to update {} out of {} rows",
+				total_rows - successful_updates,
+				total_rows
+			)
+			.into());
+		}
 	}
 }
