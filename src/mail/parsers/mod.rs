@@ -35,6 +35,8 @@ pub async fn parse_emails(
 
 			match parser.parse(&mail).await {
 				Ok(transactions) => {
+					let transactions = mark_as_non_duplicates(&mail, transactions);
+
 					#[cfg(debug_assertions)]
 					debug!("Transactions: {:#?}", transactions);
 
@@ -78,4 +80,15 @@ fn parse_regex_first_match(
 		return Ok(Some(captures_vec));
 	}
 	return Ok(None);
+}
+
+fn mark_as_non_duplicates(mail: &Mail, mut transactions: Vec<Transaction>) -> Vec<Transaction> {
+	if mail.subject.contains("楽天ペイアプリご利用内容確認メール") {
+		for t in transactions.iter_mut() {
+			let new_subject = format!("!{}", t.subject.as_deref().unwrap_or(""));
+			t.subject = Some(new_subject);
+		}
+	}
+
+	transactions
 }
