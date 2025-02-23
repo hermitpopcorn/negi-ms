@@ -64,11 +64,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	let client = get_sheets_client().await?;
 	match append_to_sheet(&client, transactions).await {
-		Ok(_) => info!("Appended to sheet"),
+		Ok(_) => {
+			info!("Appended to sheet");
+			remove_emails(mails).await?;
+		}
 		Err(e) => error!("Appending error: {}", e.to_string()),
 	}
-
-	remove_emails(mails).await?;
 
 	Ok(())
 }
