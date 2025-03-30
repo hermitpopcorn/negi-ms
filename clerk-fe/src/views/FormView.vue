@@ -84,7 +84,7 @@ const handleSubmit = async () => {
 
 <style scoped>
 .form-container {
-  width: 600px;
+  min-width: 240px;
   margin: 2rem auto;
   padding: 1rem;
   border: 1px solid #ccc;
@@ -114,6 +114,10 @@ input, select {
   border-radius: 4px;
 }
 
+input[id="datetime"] {
+  font-family: inherit;
+}
+
 button {
   display: block;
   width: 100%;
@@ -128,5 +132,27 @@ button {
 
 button:hover {
   background-color: #0056b3;
+}
+
+@media (prefers-color-scheme: dark) {
+  .form-container {
+    border-color: #444;
+    background-color: #333;
+    color: #f9f9f9;
+  }
+
+  input, select {
+    background-color: #444;
+    color: #f9f9f9;
+    border-color: #555;
+  }
+
+  button {
+    background-color: #0056b3;
+  }
+
+  button:hover {
+    background-color: #003f8a;
+  }
 }
 </style>
