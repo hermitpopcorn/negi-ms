@@ -11,8 +11,6 @@ use negi::log::setup_logger;
 use negi::sheet::auth::get_sheets_client;
 use negi::sheet::write::append_to_sheet;
 use negi::transaction::Transaction;
-use reqwest::Client;
-use rocket::State;
 use rocket::fs::FileServer;
 use rocket::http::Status;
 use rocket::serde::{Deserialize, json::Json};
@@ -29,7 +27,7 @@ struct InputData {
 }
 
 #[post("/api/submit", format = "json", data = "<input>")]
-async fn submit(sheets_client: &State<Client>, input: Json<InputData>) -> Status {
+async fn submit(input: Json<InputData>) -> Status {
 	let mut data = input.into_inner();
 
 	let amount = Decimal::from_f64(data.amount);
@@ -49,7 +47,14 @@ async fn submit(sheets_client: &State<Client>, input: Json<InputData>) -> Status
 		subject: data.subject,
 	}];
 
-	let result = append_to_sheet(sheets_client, transactions).await;
+	let sheets_client = get_sheets_client().await;
+	if sheets_client.is_err() {
+		error!("Failed to build client");
+		return Status::InternalServerError;
+	}
+	let sheets_client = sheets_client.unwrap();
+
+	let result = append_to_sheet(&sheets_client, transactions).await;
 	if let Err(e) = result {
 		error!("Failed to append to sheet: {}", e);
 		return Status::InternalServerError;
@@ -62,7 +67,6 @@ async fn submit(sheets_client: &State<Client>, input: Json<InputData>) -> Status
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	dotenv().ok();
 	setup_logger();
-	let sheets_client = get_sheets_client().await?;
 
 	let mut port = 7000;
 	if let Ok(port_str) = env::var("CLERK_PORT") {
@@ -74,7 +78,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	let result = rocket::custom(figment)
 		.mount("/", FileServer::from(Path::new("clerk-fe-public")))
-		.manage(sheets_client)
 		.mount("/", routes![submit])
 		.launch()
 		.await;
