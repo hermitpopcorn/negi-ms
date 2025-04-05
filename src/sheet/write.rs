@@ -10,7 +10,7 @@ use super::ValueRow;
 pub async fn append_to_sheet(
 	client: &Client,
 	transactions: Vec<Transaction>,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 	let spreadsheet_id = env::var("SPREADSHEET_ID")?;
 	let range = "Transactions!A:D";
 	let url = format!(
@@ -52,7 +52,7 @@ pub async fn append_to_sheet(
 pub async fn mark_duplicates(
 	client: &Client,
 	rows: Vec<ValueRow>,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 	let spreadsheet_id = env::var("SPREADSHEET_ID")?;
 
 	let mut successful_updates = 0;

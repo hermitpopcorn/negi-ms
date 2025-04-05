@@ -9,7 +9,7 @@ use tokio::fs;
 
 use super::{Mail, RawMail, get_maildir_cur_path, get_maildir_new_path};
 
-pub async fn read_emails() -> Result<Vec<Mail>, Box<dyn std::error::Error>> {
+pub async fn read_emails() -> Result<Vec<Mail>, Box<dyn std::error::Error + Send + Sync>> {
 	let maildir_path: Vec<PathBuf> = vec![get_maildir_new_path()?, get_maildir_cur_path()?];
 
 	let raw_mails = walk_directory(&maildir_path).await?;
@@ -27,7 +27,7 @@ pub async fn read_emails() -> Result<Vec<Mail>, Box<dyn std::error::Error>> {
 
 async fn walk_directory(
 	maildir_paths: &Vec<PathBuf>,
-) -> Result<Vec<RawMail>, Box<dyn std::error::Error>> {
+) -> Result<Vec<RawMail>, Box<dyn std::error::Error + Send + Sync>> {
 	let mut raw_mails = vec![];
 
 	for maildir_path in maildir_paths {

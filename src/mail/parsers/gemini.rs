@@ -17,7 +17,7 @@ pub struct GeminiParsingScheme<'a> {
 }
 
 impl<'a> GeminiParsingScheme<'a> {
-	fn build_client(&self) -> Result<Client, Box<dyn std::error::Error>> {
+	fn build_client(&self) -> Result<Client, Box<dyn std::error::Error + Send + Sync>> {
 		let mut headers = header::HeaderMap::new();
 
 		headers.insert(
@@ -114,7 +114,7 @@ impl<'a> EmailParsingScheme for GeminiParsingScheme<'a> {
 		true // Should be able to parse anything
 	}
 
-	async fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, Box<dyn std::error::Error>> {
+	async fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, Box<dyn std::error::Error + Send + Sync>> {
 		let client = self.build_client()?;
 		let url = format!(
 			"https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",

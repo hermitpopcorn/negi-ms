@@ -2,7 +2,7 @@ use std::path::Path;
 
 use super::Mail;
 
-pub async fn remove_emails(mails: Vec<Mail>) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn remove_emails(mails: Vec<Mail>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 	for mail in mails {
 		if !mail.file_path.exists() {
 			continue;
@@ -14,14 +14,14 @@ pub async fn remove_emails(mails: Vec<Mail>) -> Result<(), Box<dyn std::error::E
 }
 
 #[cfg(debug_assertions)]
-async fn remove_file(_: &Path) -> Result<(), Box<dyn std::error::Error>> {
+async fn remove_file(_: &Path) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 	use log::debug;
 	debug!("Not actually deleting file");
 	Ok(())
 }
 
 #[cfg(not(debug_assertions))]
-async fn remove_file(path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+async fn remove_file(path: &Path) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 	use std::env;
 	use std::path::PathBuf;
 	use tokio::fs;

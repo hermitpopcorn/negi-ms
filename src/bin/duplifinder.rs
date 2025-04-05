@@ -9,7 +9,7 @@ use negi::sheet::fetch::fetch_from_sheet;
 use negi::sheet::write::mark_duplicates;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 	dotenv().ok();
 	setup_logger();
 

@@ -17,7 +17,7 @@ use negi::sheet::write::append_to_sheet;
 use negi::transaction::Transaction;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 	dotenv().ok();
 	let parsers: Vec<Box<dyn EmailParsingScheme>> = vec![
 		Box::new(GeminiParsingScheme {

@@ -16,7 +16,7 @@ impl EmailParsingScheme for OcbcPaymentNotificationScheme {
 			&& mail.subject.contains("Successful Payment to")
 	}
 
-	async fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, Box<dyn std::error::Error>> {
+	async fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, Box<dyn std::error::Error + Send + Sync>> {
 		// Amount
 		let amount_captures = parse_regex_first_match(&mail.body, r"IDR\s+([0-9\,]+)", 1)?;
 		let amount_captures = amount_captures.ok_or("No amount data found")?;

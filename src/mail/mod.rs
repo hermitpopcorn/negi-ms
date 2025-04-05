@@ -53,7 +53,7 @@ impl std::fmt::Debug for Mail {
 
 pub type TransactionsParsedFromMail = HashMap<Mail, Vec<Transaction>>;
 
-pub fn get_maildir_new_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
+pub fn get_maildir_new_path() -> Result<PathBuf, Box<dyn std::error::Error + Send + Sync>> {
 	let maildir_path_str = env::var("MAILDIR_PATH").expect("MAILDIR_PATH must be set");
 	let maildir_path = PathBuf::from(&maildir_path_str);
 	let maildir_path = maildir_path.join("new");
@@ -65,7 +65,7 @@ pub fn get_maildir_new_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
 	Ok(maildir_path)
 }
 
-pub fn get_maildir_cur_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
+pub fn get_maildir_cur_path() -> Result<PathBuf, Box<dyn std::error::Error + Send + Sync>> {
 	let maildir_path_str = env::var("MAILDIR_PATH").expect("MAILDIR_PATH must be set");
 	let maildir_path = PathBuf::from(&maildir_path_str);
 	let maildir_path = maildir_path.join("cur");

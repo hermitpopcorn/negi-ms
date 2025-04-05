@@ -12,7 +12,7 @@ struct ResponseFormat {
 
 pub async fn fetch_from_sheet(
 	client: &Client,
-) -> Result<Vec<ValueRow>, Box<dyn std::error::Error>> {
+) -> Result<Vec<ValueRow>, Box<dyn std::error::Error + Send + Sync>> {
 	let spreadsheet_id = env::var("SPREADSHEET_ID")?;
 	let range = "Transactions!A2:D";
 	let url = format!(

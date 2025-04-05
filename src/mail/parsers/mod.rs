@@ -18,13 +18,13 @@ pub mod rakuten_pay;
 #[async_trait::async_trait]
 pub trait EmailParsingScheme {
 	fn can_parse(&self, mail: &Mail) -> bool;
-	async fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, Box<dyn std::error::Error>>;
+	async fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, Box<dyn std::error::Error + Send + Sync>>;
 }
 
 pub async fn parse_emails(
 	mails: Vec<Mail>,
 	parsers: &Vec<Box<dyn EmailParsingScheme>>,
-) -> Result<TransactionsParsedFromMail, Box<dyn std::error::Error>> {
+) -> Result<TransactionsParsedFromMail, Box<dyn std::error::Error + Send + Sync>> {
 	let mut map = HashMap::new();
 
 	for mail in mails {
@@ -60,7 +60,7 @@ fn parse_regex_first_match(
 	text: &str,
 	regex_literal: &str,
 	capture_count: usize,
-) -> Result<Option<Vec<String>>, Box<dyn std::error::Error>> {
+) -> Result<Option<Vec<String>>, Box<dyn std::error::Error + Send + Sync>> {
 	let mut captures_vec = vec![];
 
 	let regex = Regex::new(regex_literal)?;

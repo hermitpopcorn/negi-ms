@@ -64,7 +64,7 @@ async fn submit(input: Json<InputData>) -> Status {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 	dotenv().ok();
 	setup_logger();
 
