@@ -3,6 +3,7 @@ use std::env;
 use log::error;
 use reqwest::Client;
 
+use crate::ErrorInterface;
 use crate::{sheet::ValueRange, transaction::Transaction};
 
 use super::ValueRow;
@@ -10,7 +11,7 @@ use super::ValueRow;
 pub async fn append_to_sheet(
 	client: &Client,
 	transactions: Vec<Transaction>,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<(), ErrorInterface> {
 	let spreadsheet_id = env::var("SPREADSHEET_ID")?;
 	let range = "Transactions!A:D";
 	let url = format!(
@@ -49,10 +50,7 @@ pub async fn append_to_sheet(
 	}
 }
 
-pub async fn mark_duplicates(
-	client: &Client,
-	rows: Vec<ValueRow>,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+pub async fn mark_duplicates(client: &Client, rows: Vec<ValueRow>) -> Result<(), ErrorInterface> {
 	let spreadsheet_id = env::var("SPREADSHEET_ID")?;
 
 	let mut successful_updates = 0;

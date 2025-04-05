@@ -2,7 +2,7 @@ use chrono::{NaiveDateTime, TimeZone, Utc};
 use regex::Regex;
 use rust_decimal::{Decimal, prelude::FromPrimitive};
 
-use crate::mail::Mail;
+use crate::{ErrorInterface, mail::Mail};
 
 use super::{EmailParsingScheme, Transaction};
 
@@ -34,14 +34,14 @@ impl EmailParsingScheme for RakutenCardParsingScheme {
 			&& mail.from.contains("info@mail.rakuten-card.co.jp")
 	}
 
-	async fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, Box<dyn std::error::Error + Send + Sync>> {
+	async fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, ErrorInterface> {
 		let mut transactions = vec![];
 
 		let regex = Regex::new(
 			"■利用日: ([0-9/]+)\n■利用先: (.+)\n■利用者: 本人\n■支払方法: [0-9]*回\n■利用金額: ([0-9]+) 円\n■支払月: [0-9/]+",
 		)?;
 		for captures in regex.captures_iter(&mail.body) {
-			let transaction: Result<Option<Transaction>, Box<dyn std::error::Error + Send + Sync>> = 'parseOne: {
+			let transaction: Result<Option<Transaction>, ErrorInterface> = 'parseOne: {
 				// Subject
 				let subject = captures
 					.get(2)

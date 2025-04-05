@@ -1,6 +1,7 @@
 use chrono::{NaiveDateTime, TimeZone, Utc};
 use rust_decimal::{Decimal, prelude::FromPrimitive};
 
+use crate::ErrorInterface;
 use crate::mail::{Mail, parsers::parse_regex_first_match};
 
 use super::{EmailParsingScheme, Transaction};
@@ -16,7 +17,7 @@ impl EmailParsingScheme for OcbcPaymentNotificationScheme {
 			&& mail.subject.contains("Successful Payment to")
 	}
 
-	async fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, Box<dyn std::error::Error + Send + Sync>> {
+	async fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, ErrorInterface> {
 		// Amount
 		let amount_captures = parse_regex_first_match(&mail.body, r"IDR\s+([0-9\,]+)", 1)?;
 		let amount_captures = amount_captures.ok_or("No amount data found")?;

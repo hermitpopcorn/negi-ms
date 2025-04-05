@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use dotenv::dotenv;
 use log::{error, info};
+use negi::ErrorInterface;
 use negi::log::setup_logger;
 use negi::sheet::ValueRow;
 use negi::sheet::auth::get_sheets_client;
@@ -9,7 +10,7 @@ use negi::sheet::fetch::fetch_from_sheet;
 use negi::sheet::write::mark_duplicates;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() -> Result<(), ErrorInterface> {
 	dotenv().ok();
 	setup_logger();
 

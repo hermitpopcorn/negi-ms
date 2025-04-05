@@ -6,14 +6,16 @@ use reqwest::{
 };
 use yup_oauth2::ServiceAccountAuthenticator;
 
-pub async fn get_sheets_client() -> Result<Client, Box<dyn std::error::Error + Send + Sync>> {
+use crate::ErrorInterface;
+
+pub async fn get_sheets_client() -> Result<Client, ErrorInterface> {
 	let token = authorize().await?;
 	let client = build_client(&token)?;
 
 	Ok(client)
 }
 
-async fn authorize() -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+async fn authorize() -> Result<String, ErrorInterface> {
 	let credentials_path = env::var("GOOGLE_APPLICATION_CREDENTIALS")?;
 	let credentials = yup_oauth2::read_service_account_key(credentials_path).await?;
 
@@ -28,7 +30,7 @@ async fn authorize() -> Result<String, Box<dyn std::error::Error + Send + Sync>>
 	Ok(token.to_owned())
 }
 
-fn build_client(token: &str) -> Result<Client, Box<dyn std::error::Error + Send + Sync>> {
+fn build_client(token: &str) -> Result<Client, ErrorInterface> {
 	let mut headers = header::HeaderMap::new();
 	headers.insert(
 		AUTHORIZATION,

@@ -1,5 +1,6 @@
 use std::{collections::HashMap, env, path::PathBuf};
 
+use crate::ErrorInterface;
 use crate::transaction::Transaction;
 
 pub mod cleaner;
@@ -53,7 +54,7 @@ impl std::fmt::Debug for Mail {
 
 pub type TransactionsParsedFromMail = HashMap<Mail, Vec<Transaction>>;
 
-pub fn get_maildir_new_path() -> Result<PathBuf, Box<dyn std::error::Error + Send + Sync>> {
+pub fn get_maildir_new_path() -> Result<PathBuf, ErrorInterface> {
 	let maildir_path_str = env::var("MAILDIR_PATH").expect("MAILDIR_PATH must be set");
 	let maildir_path = PathBuf::from(&maildir_path_str);
 	let maildir_path = maildir_path.join("new");
@@ -65,7 +66,7 @@ pub fn get_maildir_new_path() -> Result<PathBuf, Box<dyn std::error::Error + Sen
 	Ok(maildir_path)
 }
 
-pub fn get_maildir_cur_path() -> Result<PathBuf, Box<dyn std::error::Error + Send + Sync>> {
+pub fn get_maildir_cur_path() -> Result<PathBuf, ErrorInterface> {
 	let maildir_path_str = env::var("MAILDIR_PATH").expect("MAILDIR_PATH must be set");
 	let maildir_path = PathBuf::from(&maildir_path_str);
 	let maildir_path = maildir_path.join("cur");

@@ -1,6 +1,7 @@
 use ::log::info;
 use dotenv::dotenv;
 use log::error;
+use negi::ErrorInterface;
 use negi::log::setup_logger;
 use negi::mail::parsers::parse_emails;
 use negi::mail::reader::read_emails;
@@ -17,7 +18,7 @@ use negi::sheet::write::append_to_sheet;
 use negi::transaction::Transaction;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() -> Result<(), ErrorInterface> {
 	dotenv().ok();
 	let parsers: Vec<Box<dyn EmailParsingScheme>> = vec![
 		Box::new(GeminiParsingScheme {

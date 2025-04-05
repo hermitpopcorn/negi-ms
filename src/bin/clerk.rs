@@ -7,6 +7,7 @@ use std::path::Path;
 
 use chrono::DateTime;
 use dotenv::dotenv;
+use negi::ErrorInterface;
 use negi::log::setup_logger;
 use negi::sheet::auth::get_sheets_client;
 use negi::sheet::write::append_to_sheet;
@@ -64,7 +65,7 @@ async fn submit(input: Json<InputData>) -> Status {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() -> Result<(), ErrorInterface> {
 	dotenv().ok();
 	setup_logger();
 
@@ -74,7 +75,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 			port = port_num;
 		}
 	}
-	let figment = rocket::Config::figment().merge(("port", port)).merge(("address", Ipv4Addr::LOCALHOST));
+	let figment = rocket::Config::figment()
+		.merge(("port", port))
+		.merge(("address", Ipv4Addr::LOCALHOST));
 
 	let result = rocket::custom(figment)
 		.mount("/", FileServer::from(Path::new("clerk-fe-public")))

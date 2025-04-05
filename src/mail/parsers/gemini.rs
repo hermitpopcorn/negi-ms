@@ -6,6 +6,7 @@ use reqwest::{
 };
 use serde::Deserialize;
 
+use crate::ErrorInterface;
 use crate::mail::Mail;
 
 use super::{EmailParsingScheme, Transaction};
@@ -17,7 +18,7 @@ pub struct GeminiParsingScheme<'a> {
 }
 
 impl<'a> GeminiParsingScheme<'a> {
-	fn build_client(&self) -> Result<Client, Box<dyn std::error::Error + Send + Sync>> {
+	fn build_client(&self) -> Result<Client, ErrorInterface> {
 		let mut headers = header::HeaderMap::new();
 
 		headers.insert(
@@ -114,7 +115,7 @@ impl<'a> EmailParsingScheme for GeminiParsingScheme<'a> {
 		true // Should be able to parse anything
 	}
 
-	async fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, Box<dyn std::error::Error + Send + Sync>> {
+	async fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, ErrorInterface> {
 		let client = self.build_client()?;
 		let url = format!(
 			"https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",

@@ -3,16 +3,14 @@ use std::env;
 use reqwest::Client;
 use serde::Deserialize;
 
-use crate::sheet::ValueRow;
+use crate::{ErrorInterface, sheet::ValueRow};
 
 #[derive(Deserialize, Debug)]
 struct ResponseFormat {
 	values: Vec<serde_json::Value>,
 }
 
-pub async fn fetch_from_sheet(
-	client: &Client,
-) -> Result<Vec<ValueRow>, Box<dyn std::error::Error + Send + Sync>> {
+pub async fn fetch_from_sheet(client: &Client) -> Result<Vec<ValueRow>, ErrorInterface> {
 	let spreadsheet_id = env::var("SPREADSHEET_ID")?;
 	let range = "Transactions!A2:D";
 	let url = format!(
