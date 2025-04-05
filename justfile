@@ -17,7 +17,7 @@ devd: format
 devc: format
 	cargo run --bin clerk
 
-build:
+build: format
 	cargo build --release
 	cd clerk-fe && pnpm run build
 
