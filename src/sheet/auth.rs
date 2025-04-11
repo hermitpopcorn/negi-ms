@@ -1,4 +1,5 @@
 use std::env;
+use std::fs;
 
 use reqwest::{
 	Client,
@@ -21,7 +22,11 @@ async fn authorize() -> Result<String, ErrorInterface> {
 
 	let scopes = &["https://www.googleapis.com/auth/spreadsheets"];
 
+	let path = std::path::Path::new("/tmp/negi/");
+	fs::create_dir_all(path)?;
+
 	let authenticator = ServiceAccountAuthenticator::builder(credentials)
+		.persist_tokens_to_disk(path.join("tokens"))
 		.build()
 		.await?;
 	let get_token = authenticator.token(scopes).await?;
