@@ -18,7 +18,7 @@ const handleSubmit = async () => {
     account: account.value,
     datetime: new Date(datetime.value).toISOString(),
     subject: subject.value,
-    amount: amount.value,
+    amount: -Number(amount.value),
   };
 
   try {
