@@ -22,7 +22,7 @@ async fn main() -> Result<(), ErrorInterface> {
 	dotenv().ok();
 	let parsers: Vec<Box<dyn EmailParsingScheme>> = vec![
 		Box::new(GeminiParsingScheme {
-			model: "gemini-2.0-flash",
+			model: "gemini-2.5-flash-preview-05-20",
 			accounts: vec!["Rakuten", "OCBC", "BCA", "Jenius"],
 			skips: vec![
 				"デイリーヤマザキアプ",
