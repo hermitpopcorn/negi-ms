@@ -17,4 +17,5 @@ pub struct ValueRow {
 	pub subject: String,
 	pub date_value: f64,
 	pub amount: i64,
+	pub category: String,
 }

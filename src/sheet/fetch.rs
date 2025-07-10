@@ -12,7 +12,7 @@ struct ResponseFormat {
 
 pub async fn fetch_from_sheet(client: &Client) -> Result<Vec<ValueRow>, ErrorInterface> {
 	let spreadsheet_id = env::var("SPREADSHEET_ID")?;
-	let range = "Transactions!A2:D";
+	let range = "Transactions!A2:F";
 	let url = format!(
 		"https://sheets.googleapis.com/v4/spreadsheets/{}/values/{}?valueRenderOption=UNFORMATTED_VALUE",
 		spreadsheet_id, range
@@ -51,6 +51,7 @@ pub async fn fetch_from_sheet(client: &Client) -> Result<Vec<ValueRow>, ErrorInt
 				subject: i[1].as_str().unwrap_or("").to_owned(),
 				date_value: i[2].as_f64().unwrap_or(0.0),
 				amount: i[3].as_i64().unwrap_or(0),
+				category: i[5].as_str().unwrap_or("").to_owned(),
 			}
 		})
 		.collect();

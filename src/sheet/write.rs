@@ -143,3 +143,71 @@ pub async fn mark_duplicates_in_sheet(
 		}
 	}
 }
+
+pub async fn set_categories_in_sheet(
+	client: &Client,
+	rows: Vec<ValueRow>,
+) -> Result<(), ErrorInterface> {
+	let spreadsheet_id = env::var("SPREADSHEET_ID")?;
+
+	let mut successful_updates = 0;
+	let total_rows = rows.len();
+
+	for row in rows {
+		let make_url = |range: &str| -> String {
+			format!(
+				"https://sheets.googleapis.com/v4/spreadsheets/{}/values/{}?valueInputOption=USER_ENTERED&includeValuesInResponse=0",
+				spreadsheet_id, range
+			)
+		};
+
+		let write_category = {
+			let range = format!("Transactions!F{}:F{}", row.row_number, row.row_number);
+			let url = make_url(&range);
+			let value_range = ValueRange {
+				range,
+				values: vec![vec![row.category]],
+			};
+
+			let response = client
+				.put(&url)
+				.body(serde_json::to_string(&value_range)?)
+				.send()
+				.await?;
+
+			response.error_for_status()
+		};
+
+		if write_category.is_err() {
+			error!(
+				"Could not update category for row {}. Error: {}",
+				row.row_number,
+				write_category.unwrap_err()
+			);
+			continue;
+		}
+
+		successful_updates += 1;
+	}
+
+	#[cfg(debug_assertions)]
+	{
+		use log::debug;
+		debug!(
+			"Updated rows: {}, total rows: {}",
+			successful_updates, total_rows
+		);
+	}
+
+	match successful_updates == total_rows {
+		true => return Ok(()),
+		false => {
+			return Err(format!(
+				"Failed to update {} out of {} rows",
+				total_rows - successful_updates,
+				total_rows
+			)
+			.into());
+		}
+	}
+}
