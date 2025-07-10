@@ -50,7 +50,10 @@ pub async fn append_to_sheet(
 	}
 }
 
-pub async fn mark_duplicates(client: &Client, rows: Vec<ValueRow>) -> Result<(), ErrorInterface> {
+pub async fn mark_duplicates_in_sheet(
+	client: &Client,
+	rows: Vec<ValueRow>,
+) -> Result<(), ErrorInterface> {
 	let spreadsheet_id = env::var("SPREADSHEET_ID")?;
 
 	let mut successful_updates = 0;

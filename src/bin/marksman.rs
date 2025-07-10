@@ -7,7 +7,8 @@ use negi::log::setup_logger;
 use negi::sheet::ValueRow;
 use negi::sheet::auth::get_sheets_client;
 use negi::sheet::fetch::fetch_from_sheet;
-use negi::sheet::write::mark_duplicates;
+use negi::sheet::write::mark_duplicates_in_sheet;
+use reqwest::Client;
 
 #[tokio::main]
 async fn main() -> Result<(), ErrorInterface> {
@@ -16,21 +17,26 @@ async fn main() -> Result<(), ErrorInterface> {
 
 	let client = get_sheets_client().await?;
 	let sheet_values = fetch_from_sheet(&client).await?;
-	let grouped_map = make_grouped_map(sheet_values);
-	let possible_duplicates = find_possible_duplicates(&grouped_map);
+
+	mark_duplicates(&client, sheet_values.clone()).await;
+
+	Ok(())
+}
+
+async fn mark_duplicates(client: &Client, values: Vec<ValueRow>) {
+	let grouped_map = make_grouped_map(values);
+	let possible_duplicates: Vec<ValueRow> = find_possible_duplicates(&grouped_map);
 
 	info!("Found {} possible duplicates", possible_duplicates.len());
 
 	if possible_duplicates.len() < 1 {
-		return Ok(());
+		return;
 	}
 
-	match mark_duplicates(&client, possible_duplicates).await {
+	match mark_duplicates_in_sheet(&client, possible_duplicates).await {
 		Ok(_) => info!("Marked all of them as possible duplicates"),
 		Err(e) => error!("Marking error: {}", e.to_string()),
-	}
-
-	Ok(())
+	};
 }
 
 type GroupedMap = HashMap<i64, Vec<ValueRow>>;

@@ -11,7 +11,7 @@ format:
 devw: format
 	cargo run --bin watcher
 
-devd: format
+devm: format
 	cargo run --bin marksman
 
 devc: format
