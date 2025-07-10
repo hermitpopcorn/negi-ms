@@ -25,11 +25,19 @@ struct InputData {
 	datetime: DateTime<chrono::Utc>,
 	amount: f64,
 	subject: Option<String>,
+	password: Option<String>,
 }
 
 #[post("/api/submit", format = "json", data = "<input>")]
 async fn submit(input: Json<InputData>) -> Status {
 	let mut data = input.into_inner();
+
+	if let Ok(password) = env::var("CLERK_PASSWORD") {
+		let inputted_password = data.password.unwrap_or("".to_owned());
+		if inputted_password != password {
+			return Status::Unauthorized;
+		}
+	}
 
 	let amount = Decimal::from_f64(data.amount);
 	if amount.is_none() {

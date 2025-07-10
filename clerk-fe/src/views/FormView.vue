@@ -8,6 +8,7 @@ const account = ref('');
 const datetime = ref(initialDate.slice(0, 16));
 const subject = ref('');
 const amount = ref('');
+const password = ref('');
 const submitting = ref(false);
 
 const handleSubmit = async () => {
@@ -19,6 +20,7 @@ const handleSubmit = async () => {
     datetime: new Date(datetime.value).toISOString(),
     subject: subject.value,
     amount: -Number(amount.value),
+    password: password.value,
   };
 
   try {
@@ -76,6 +78,11 @@ const handleSubmit = async () => {
       <div class="form-group">
         <label for="amount">Amount</label>
         <input id="amount" v-model="amount" type="number" step="1" inputmode="numeric" required />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input id="password" v-model="password" type="password" />
       </div>
 
       <button type="submit" :disabled="submitting">{{ !submitting ? "Submit" : "Sending..." }}</button>
