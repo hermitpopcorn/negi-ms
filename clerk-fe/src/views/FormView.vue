@@ -59,6 +59,7 @@ const handleSubmit = async () => {
           <option>Wallet IDR</option>
           <option>Wallet JPY</option>
           <option>manaca</option>
+          <option>ICOCA</option>
         </select>
       </div>
 
