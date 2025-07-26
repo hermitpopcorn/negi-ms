@@ -51,11 +51,6 @@ fn make_grouped_map(values: Vec<ValueRow>) -> GroupedMap {
 
 	// group rows
 	for v in values {
-		// skip ones marked as not duplicate
-		if v.subject.starts_with("!") {
-			continue;
-		}
-
 		// skip ones already marked as duplicate
 		if v.subject.starts_with("?") {
 			continue;
@@ -88,6 +83,12 @@ fn find_possible_duplicates(map: &GroupedMap) -> Vec<ValueRow> {
 			if (group[i + 1].date_value - group[i].date_value).abs() <= 2.0
 				&& group[i + 1].account.trim() == group[i].account.trim()
 			{
+				// skip if marked as not duplicate
+				if group[i + 1].subject.starts_with("!") {
+					i += 1;
+					continue;
+				}
+
 				let mut cloned_duplicate = group[i + 1].clone();
 				let mut original_subject = cloned_duplicate.subject;
 				if original_subject.len() > 0 {
