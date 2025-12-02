@@ -1,3 +1,4 @@
 .env
 negi-*.json
 /target
+.pnpm-store
