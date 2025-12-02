@@ -19,7 +19,7 @@ devc: format
 
 build: format
 	cargo build --release
-	cd clerk-fe && pnpm run build
+	cd clerk-fe && pnpm install && pnpm run build
 
 install: build
 	cp -v target/release/watcher {{install_target_watcher}}
