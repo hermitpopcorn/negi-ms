@@ -47,6 +47,9 @@ async fn submit(input: Json<InputData>) -> Status {
 
 	if data.subject.is_some() && data.subject.as_ref().unwrap().is_empty() {
 		data.subject = None;
+	} else {
+		let subject = data.subject.as_mut().unwrap();
+		subject.insert_str(0, "!");
 	}
 
 	let transactions = vec![Transaction {
