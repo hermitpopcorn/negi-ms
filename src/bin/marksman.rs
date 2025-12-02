@@ -74,6 +74,11 @@ fn make_grouped_map(values: Vec<ValueRow>) -> GroupedMap {
 	map
 }
 
+struct DuplicateIndexes {
+	original: usize,
+	suspected_duplicate: usize,
+}
+
 fn find_possible_duplicates(map: &GroupedMap) -> Vec<ValueRow> {
 	let mut possible_duplicates = vec![];
 
@@ -83,19 +88,29 @@ fn find_possible_duplicates(map: &GroupedMap) -> Vec<ValueRow> {
 			if (group[i + 1].date_value - group[i].date_value).abs() <= 2.0
 				&& group[i + 1].account.trim() == group[i].account.trim()
 			{
-				// skip if marked as not duplicate
-				if group[i + 1].subject.starts_with("!") {
+				// skip if both marked as not duplicate
+				if group[i].subject.starts_with("!") && group[i + 1].subject.starts_with("!") {
 					i += 1;
 					continue;
 				}
 
-				let mut cloned_duplicate = group[i + 1].clone();
+				// if the latter is marked as not duplicate, flip
+				let flip =
+					!group[i].subject.starts_with("!") && group[i + 1].subject.starts_with("!");
+				let indexes = DuplicateIndexes {
+					original: if flip { i + 1 } else { i },
+					suspected_duplicate: if flip { i } else { i + 1 },
+				};
+
+				let mut cloned_duplicate = group[indexes.suspected_duplicate].clone();
 				let mut original_subject = cloned_duplicate.subject;
 				if original_subject.len() > 0 {
 					original_subject = format!(" {}", original_subject); // prepend space if non-empty
 				}
-				cloned_duplicate.subject =
-					format!("?dupof({}){}", group[i].row_number, original_subject);
+				cloned_duplicate.subject = format!(
+					"?dupof({}){}",
+					group[indexes.original].row_number, original_subject
+				);
 				possible_duplicates.push(cloned_duplicate);
 			}
 
