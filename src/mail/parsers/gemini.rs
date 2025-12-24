@@ -50,16 +50,21 @@ impl<'a> GeminiParsingScheme<'a> {
 
 	fn make_prompt(&self, mail: &Mail) -> String {
 		let mut accounts_str = String::new();
-		for account in &self.accounts {
-			accounts_str.push_str(&format!("'{}',", *account));
+		for account in self.accounts.iter() {
+			accounts_str.push_str(&format!("'{}',", account));
 		}
 		accounts_str.pop();
 
 		let mut skips_str = String::new();
-		for skip in &self.skips {
-			skips_str.push_str(&format!("'{}',", *skip));
+		if self.skips.len() > 0 {
+			skips_str.push_str(
+				"Skip an entry if it has a subject or place of purchase that contains any of this: ",
+			);
+			for skip in self.skips.iter() {
+				skips_str.push_str(&format!("'{}',", skip));
+			}
+			skips_str.pop();
 		}
-		skips_str.pop();
 
 		format!(
 			"Parse the following email contents and give me the time of purchase, where/what I purchased, when the purchase happened
@@ -72,7 +77,7 @@ impl<'a> GeminiParsingScheme<'a> {
 			If the email is in Japanese and has no purchase time specified, assume it's 00:00:00 AM JST.
 			If the email is in Indonesian or English and has no purchase time specified, assume it's 00:00:00 AM WIB.
 			For account, choose one that fits best the email from this list: {}.
-			Skip an entry if it has a subject or place of purchase that contains any of this: {}.
+			{}.
 			Return an empty array if you can't parse the email or can't choose a suitable account from the list.
 			This is the email: {}",
 			accounts_str,

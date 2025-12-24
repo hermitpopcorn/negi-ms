@@ -11,18 +11,7 @@ pub struct RakutenCardParsingScheme {
 }
 
 impl RakutenCardParsingScheme {
-	fn in_skip_list(&self, subject: &str) -> bool {
-		// Skip Rakuten Pay payments
-		if subject.contains("楽天ＳＰ") && subject.contains("デイリーヤマザキアプ") {
-			return true;
-		}
-		if subject.contains("楽天ＳＰ") && subject.contains("ローソンアプリ") {
-			return true;
-		}
-		if subject.contains("楽天ＳＰ") && subject.contains("ファミリーマートアプ") {
-			return true;
-		}
-
+	fn in_skip_list(&self, _: &str) -> bool {
 		return false;
 	}
 }

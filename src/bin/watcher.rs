@@ -24,12 +24,7 @@ async fn main() -> Result<(), ErrorInterface> {
 		Box::new(GeminiParsingScheme {
 			model: "gemini-2.5-flash",
 			accounts: vec!["Rakuten", "OCBC", "BCA", "Jenius"],
-			skips: vec![
-				"デイリーヤマザキアプ",
-				"ローソンアプリ",
-				"ファミリーマートアプ",
-				"楽天ペイアプリセブン",
-			],
+			skips: vec![],
 		}),
 		Box::new(RakutenPayParsingScheme {
 			account: String::from("Rakuten"),
