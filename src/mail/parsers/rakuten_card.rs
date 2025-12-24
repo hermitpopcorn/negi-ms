@@ -38,7 +38,7 @@ impl EmailParsingScheme for RakutenCardParsingScheme {
 		let mut transactions = vec![];
 
 		let regex = Regex::new(
-			"■利用日: ([0-9/]+)\n■利用先: (.+)\n■利用者: 本人\n■支払方法: [0-9]*回\n■利用金額: ([0-9]+) 円\n■支払月: [0-9/]+",
+			"■利用日: ([0-9/]+)\n■利用先: (.+)\n■利用者: 本人\n■支払方法: [0-9]*回\n■利用金額: ([0-9,]+) 円\n■支払月: [0-9/]+",
 		)?;
 		for captures in regex.captures_iter(&mail.body) {
 			let transaction: Result<Option<Transaction>, ErrorInterface> = 'parseOne: {
