@@ -73,7 +73,8 @@ impl GeminiParsingScheme {
 			Format your result in JSON, just as I specified in the generation config's schema.
 			Make the items independent, do not create some sort of header object and do not make an item if it does not have an amount or a purchase date.
 			Do not fill subject with the subject of the email, fill it using the name of item I purchased or where I purchased it at.
-			Change any half-width Japanese characters to full-width Japanese character, except spaces, from the subject. Change full-width spaces to regular, half-width spaces.
+			Change any half-width Japanese kana to full-width, except spaces, from the subject. Change full-width spaces to regular, half-width spaces.
+			Change full-width alphabets into regular, half-width alphabets.
 			Remove suffixes such as \"/NFC\" from the subject. Trim any whitespaces such as spaces, tabs, and newlines from the start or the end of the subjects.
 			If the email is in Japanese and has no purchase time specified, assume it's 00:00:00 AM JST.
 			If the email is in Indonesian or English and has no purchase time specified, assume it's 00:00:00 AM WIB.
