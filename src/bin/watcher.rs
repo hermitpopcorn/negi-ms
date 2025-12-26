@@ -1,4 +1,5 @@
 use std::env;
+use std::sync::Arc;
 
 use ::log::info;
 use dotenv::dotenv;
@@ -15,16 +16,21 @@ use negi::mail::{
 		rakuten_card::RakutenCardParsingScheme, rakuten_pay::RakutenPayParsingScheme,
 	},
 };
+use negi::network::ClientInterface;
+use negi::network::reqwest_client::ReqwestClient;
 use negi::sheet::auth::get_sheets_client;
 use negi::sheet::write::append_to_sheet;
 use negi::transaction::Transaction;
+use tokio::sync::Mutex;
 
 #[tokio::main]
 async fn main() -> Result<(), ErrorInterface> {
 	dotenv().ok();
 	setup_logger();
 
-	let parsers = get_parsers()?;
+	let client: ClientInterface = Arc::new(Mutex::new(ReqwestClient::new()));
+
+	let parsers = get_parsers(&client)?;
 	let mails = read_emails().await?;
 	let transactions = parse_emails(mails, &parsers).await?;
 
@@ -56,23 +62,31 @@ async fn main() -> Result<(), ErrorInterface> {
 	Ok(())
 }
 
-fn get_parsers() -> Result<Vec<Box<dyn EmailParsingScheme>>, ErrorInterface> {
+fn get_parsers(
+	client_interface: &ClientInterface,
+) -> Result<Vec<Box<dyn EmailParsingScheme>>, ErrorInterface> {
 	Ok(vec![
-		Box::new(get_gemini_parser()?),
+		Box::new(get_gemini_parser(client_interface)?),
 		Box::new(RakutenPayParsingScheme {
-			account: env::var("RAKUTEN_PAY_PARSING_SCHEME_TARGET_ACCOUNT").unwrap_or(String::from("Rakuten")),
+			account: env::var("RAKUTEN_PAY_PARSING_SCHEME_TARGET_ACCOUNT")
+				.unwrap_or(String::from("Rakuten")),
 		}),
 		Box::new(RakutenCardParsingScheme {
-			account: env::var("RAKUTEN_CARD_PARSING_SCHEME_TARGET_ACCOUNT").unwrap_or(String::from("Rakuten")),
+			account: env::var("RAKUTEN_CARD_PARSING_SCHEME_TARGET_ACCOUNT")
+				.unwrap_or(String::from("Rakuten")),
 		}),
 		Box::new(OcbcPaymentNotificationScheme {
-			account: env::var("OCBC_PAYMENT_NOTIFICATION_PARSING_SCHEME_TARGET_ACCOUNT").unwrap_or(String::from("OCBC")),
+			account: env::var("OCBC_PAYMENT_NOTIFICATION_PARSING_SCHEME_TARGET_ACCOUNT")
+				.unwrap_or(String::from("OCBC")),
 		}),
 	])
 }
 
-fn get_gemini_parser() -> Result<GeminiParsingScheme, ErrorInterface> {
+fn get_gemini_parser(
+	client_interface: &ClientInterface,
+) -> Result<GeminiParsingScheme, ErrorInterface> {
 	Ok(GeminiParsingScheme {
+		client: client_interface.clone(),
 		model: env::var("GEMINI_MODEL").unwrap_or(String::from("gemini-2.5-flash")),
 		api_key: env::var("GEMINI_API_KEY")?,
 		accounts: 'gemini_target_accounts: {

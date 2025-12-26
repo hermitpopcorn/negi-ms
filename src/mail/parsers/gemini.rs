@@ -1,15 +1,12 @@
-use reqwest::{
-	Client,
-	header::{self, CONTENT_TYPE},
-};
 use serde::Deserialize;
 
-use crate::ErrorInterface;
-use crate::mail::Mail;
+use crate::{ErrorInterface, network::ClientInterface};
+use crate::{mail::Mail, network::ClientRequest};
 
 use super::{EmailParsingScheme, Transaction};
 
 pub struct GeminiParsingScheme {
+	pub client: ClientInterface,
 	pub api_key: String,
 	pub model: String,
 	pub accounts: Option<Vec<String>>,
@@ -17,18 +14,6 @@ pub struct GeminiParsingScheme {
 }
 
 impl GeminiParsingScheme {
-	fn build_client(&self) -> Result<Client, ErrorInterface> {
-		let mut headers = header::HeaderMap::new();
-
-		headers.insert(
-			CONTENT_TYPE,
-			header::HeaderValue::from_static("application/json"),
-		);
-		let client = Client::builder().default_headers(headers).build()?;
-
-		Ok(client)
-	}
-
 	fn make_generation_config(&self) -> serde_json::Value {
 		serde_json::json!({
 			"response_mime_type": "application/json",
@@ -125,27 +110,36 @@ impl EmailParsingScheme for GeminiParsingScheme {
 	}
 
 	async fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, ErrorInterface> {
-		let client = self.build_client()?;
 		let url = format!(
 			"https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
-			self.model,
-			self.api_key,
+			self.model, self.api_key,
 		);
 
 		let generation_config = self.make_generation_config();
 		let prompt = self.make_prompt(mail);
-		let body = self.make_body(generation_config, prompt);
+		let body_json = self.make_body(generation_config, prompt);
 
-		let response = client.post(&url).json(&body).send().await?;
-		let response_text = response.text().await?;
+		let request = ClientRequest {
+			url,
+			headers: None,
+			body_json,
+		};
 
-		#[cfg(debug_assertions)]
+		let response;
 		{
-			use log::debug;
-			debug!("Gemini response: {}", response_text);
+			let client_guard = self.client.lock().await;
+			response = client_guard.post(request).await?;
 		}
 
-		let response_json = serde_json::from_str::<ResponseFormat>(&response_text)?;
+		if response.code != 200 {
+			return Err(format!(
+				"Response failed, error code: {}, body: {}",
+				response.code, response.body,
+			)
+			.into());
+		}
+
+		let response_json = serde_json::from_str::<ResponseFormat>(&response.body)?;
 		let transactions = response_json.candidates[0].content.parts[0].text.clone();
 		let transactions = serde_json::from_str::<Vec<Transaction>>(&transactions)?;
 
@@ -154,5 +148,87 @@ impl EmailParsingScheme for GeminiParsingScheme {
 		}
 
 		Ok(transactions)
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use std::sync::Arc;
+
+	use tokio::sync::Mutex;
+
+	use crate::{
+		mail::{
+			Mail,
+			parsers::{EmailParsingScheme, gemini::GeminiParsingScheme},
+		},
+		network::dummies::DummyClient,
+	};
+
+	#[test]
+	fn can_only_parse_if_target_accounts_defined() {
+		let mail = Mail::create_test_mail();
+		let client = Arc::new(Mutex::new(DummyClient::new()));
+
+		{
+			let scheme = GeminiParsingScheme {
+				client: client.clone(),
+				api_key: "key".into(),
+				model: String::from("some-model"),
+				accounts: None,
+				skips: None,
+			};
+			assert_eq!(false, scheme.can_parse(&mail));
+		}
+
+		{
+			let scheme: GeminiParsingScheme = GeminiParsingScheme {
+				client: client.clone(),
+				api_key: "key".into(),
+				model: String::from("some-model"),
+				accounts: Some(vec![]),
+				skips: None,
+			};
+			assert_eq!(false, scheme.can_parse(&mail));
+		}
+
+		{
+			let scheme: GeminiParsingScheme = GeminiParsingScheme {
+				client: client.clone(),
+				api_key: "key".into(),
+				model: String::from("some-model"),
+				accounts: Some(vec!["Some Account".into()]),
+				skips: None,
+			};
+			assert_eq!(true, scheme.can_parse(&mail));
+		}
+	}
+
+	#[tokio::test]
+	async fn non_200_response_returns_expected_err() {
+		let mail = Mail::create_test_mail();
+		let client = Arc::new(Mutex::new(DummyClient::new()));
+		{
+			client.lock().await.inject_response(500, "ERR!".into());
+		}
+
+		{
+			let scheme: GeminiParsingScheme = GeminiParsingScheme {
+				client: client.clone(),
+				api_key: "key".into(),
+				model: String::from("some-model"),
+				accounts: Some(vec!["Some Account".into()]),
+				skips: None,
+			};
+			assert_eq!(true, scheme.can_parse(&mail));
+
+			let parse_result = scheme.parse(&mail).await;
+			assert_eq!(true, parse_result.is_err());
+			let error_message = parse_result.err().unwrap().to_string();
+			assert_eq!(
+				"Response failed, error code: 500, body: ERR!",
+				error_message
+			);
+		}
 	}
 }

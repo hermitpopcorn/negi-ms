@@ -77,3 +77,15 @@ pub fn get_maildir_cur_path() -> Result<PathBuf, ErrorInterface> {
 
 	Ok(maildir_path)
 }
+
+#[cfg(test)]
+impl Mail {
+	pub fn create_test_mail() -> Self {
+		Self {
+			file_path: "/tmp/fake-path".into(),
+			from: "sender".into(),
+			subject: "subject".into(),
+			body: "contents".into(),
+		}
+	}
+}
