@@ -1,3 +1,5 @@
+use std::env;
+
 use ::log::info;
 use dotenv::dotenv;
 use log::error;
@@ -20,25 +22,9 @@ use negi::transaction::Transaction;
 #[tokio::main]
 async fn main() -> Result<(), ErrorInterface> {
 	dotenv().ok();
-	let parsers: Vec<Box<dyn EmailParsingScheme>> = vec![
-		Box::new(GeminiParsingScheme {
-			model: "gemini-2.5-flash",
-			accounts: vec!["Rakuten", "OCBC", "BCA", "Jenius"],
-			skips: vec![],
-		}),
-		Box::new(RakutenPayParsingScheme {
-			account: String::from("Rakuten"),
-		}),
-		Box::new(RakutenCardParsingScheme {
-			account: String::from("Rakuten"),
-		}),
-		Box::new(OcbcPaymentNotificationScheme {
-			account: String::from("OCBC"),
-		}),
-	];
-
 	setup_logger();
 
+	let parsers = get_parsers()?;
 	let mails = read_emails().await?;
 	let transactions = parse_emails(mails, &parsers).await?;
 
@@ -68,4 +54,42 @@ async fn main() -> Result<(), ErrorInterface> {
 	}
 
 	Ok(())
+}
+
+fn get_parsers() -> Result<Vec<Box<dyn EmailParsingScheme>>, ErrorInterface> {
+	Ok(vec![
+		Box::new(get_gemini_parser()?),
+		Box::new(RakutenPayParsingScheme {
+			account: env::var("RAKUTEN_PAY_PARSING_SCHEME_TARGET_ACCOUNT").unwrap_or(String::from("Rakuten")),
+		}),
+		Box::new(RakutenCardParsingScheme {
+			account: env::var("RAKUTEN_CARD_PARSING_SCHEME_TARGET_ACCOUNT").unwrap_or(String::from("Rakuten")),
+		}),
+		Box::new(OcbcPaymentNotificationScheme {
+			account: env::var("OCBC_PAYMENT_NOTIFICATION_PARSING_SCHEME_TARGET_ACCOUNT").unwrap_or(String::from("OCBC")),
+		}),
+	])
+}
+
+fn get_gemini_parser() -> Result<GeminiParsingScheme, ErrorInterface> {
+	Ok(GeminiParsingScheme {
+		model: env::var("GEMINI_MODEL").unwrap_or(String::from("gemini-2.5-flash")),
+		api_key: env::var("GEMINI_API_KEY")?,
+		accounts: 'gemini_target_accounts: {
+			let accounts_string = env::var("GEMINI_TARGET_ACCOUNTS");
+			if accounts_string.is_err() {
+				break 'gemini_target_accounts None;
+			}
+			let accounts_string = accounts_string.unwrap();
+			if accounts_string.len() < 1 {
+				break 'gemini_target_accounts None;
+			}
+			let accounts = accounts_string
+				.split(",")
+				.map(|s| s.to_owned())
+				.collect::<Vec<String>>();
+			Some(accounts)
+		},
+		skips: None,
+	})
 }

@@ -1,5 +1,3 @@
-use std::env;
-
 use reqwest::{
 	Client,
 	header::{self, CONTENT_TYPE},
@@ -11,13 +9,14 @@ use crate::mail::Mail;
 
 use super::{EmailParsingScheme, Transaction};
 
-pub struct GeminiParsingScheme<'a> {
-	pub model: &'a str,
-	pub accounts: Vec<&'a str>,
-	pub skips: Vec<&'a str>,
+pub struct GeminiParsingScheme {
+	pub api_key: String,
+	pub model: String,
+	pub accounts: Option<Vec<String>>,
+	pub skips: Option<Vec<String>>,
 }
 
-impl<'a> GeminiParsingScheme<'a> {
+impl GeminiParsingScheme {
 	fn build_client(&self) -> Result<Client, ErrorInterface> {
 		let mut headers = header::HeaderMap::new();
 
@@ -50,17 +49,19 @@ impl<'a> GeminiParsingScheme<'a> {
 
 	fn make_prompt(&self, mail: &Mail) -> String {
 		let mut accounts_str = String::new();
-		for account in self.accounts.iter() {
-			accounts_str.push_str(&format!("'{}',", account));
+		if self.accounts.as_ref().is_some_and(|v| v.len() > 0) {
+			for account in self.accounts.as_deref().unwrap() {
+				accounts_str.push_str(&format!("'{}',", account));
+			}
 		}
 		accounts_str.pop();
 
 		let mut skips_str = String::new();
-		if self.skips.len() > 0 {
+		if self.skips.as_ref().is_some_and(|v| v.len() > 0) {
 			skips_str.push_str(
 				"Skip an entry if it has a subject or place of purchase that contains any of this: ",
 			);
-			for skip in self.skips.iter() {
+			for skip in self.skips.as_deref().unwrap() {
 				skips_str.push_str(&format!("'{}',", skip));
 			}
 			skips_str.pop();
@@ -117,9 +118,9 @@ struct Part {
 }
 
 #[async_trait::async_trait]
-impl<'a> EmailParsingScheme for GeminiParsingScheme<'a> {
+impl EmailParsingScheme for GeminiParsingScheme {
 	fn can_parse(&self, _: &Mail) -> bool {
-		true // Should be able to parse anything
+		return self.accounts.as_ref().is_some_and(|v| v.len() > 0);
 	}
 
 	async fn parse(&self, mail: &Mail) -> Result<Vec<Transaction>, ErrorInterface> {
@@ -127,7 +128,7 @@ impl<'a> EmailParsingScheme for GeminiParsingScheme<'a> {
 		let url = format!(
 			"https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
 			self.model,
-			env::var("GEMINI_API_KEY")?,
+			self.api_key,
 		);
 
 		let generation_config = self.make_generation_config();
