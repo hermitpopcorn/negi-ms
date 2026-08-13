@@ -95,13 +95,19 @@ fn find_possible_duplicates(map: &GroupedMap) -> Vec<ValueRow> {
 	let mut possible_duplicates = vec![];
 
 	for group in map.values() {
+		let group: &Vec<ValueRow> = group;
+
 		let mut i = 0;
 		while i < group.len().saturating_sub(1) {
-			if (group[i + 1].date_value - group[i].date_value).abs() <= 2.0
-				&& group[i + 1].account.trim() == group[i].account.trim()
+			let current_item = &group[i];
+			let next_item = &group[i + 1];
+
+			// if not 2 days apart and same account
+			if (next_item.date_value - current_item.date_value).abs() <= 2.0
+				&& next_item.account.trim() == current_item.account.trim()
 			{
 				// skip if both marked as not duplicate
-				if group[i].subject.starts_with("!") && group[i + 1].subject.starts_with("!") {
+				if current_item.marked_nondup() && next_item.marked_nondup() {
 					i += 1;
 					continue;
 				}
@@ -109,10 +115,15 @@ fn find_possible_duplicates(map: &GroupedMap) -> Vec<ValueRow> {
 				// if only the latter is marked as not duplicate, or the earlier row is at HH:00:00,
 				// flip the original/suspected-duplicate decision
 				// (we prefer exact-timed transactions over transactions dated at HH:00:00)
-				let starts_with_exclamation =
-					!group[i].subject.starts_with("!") && group[i + 1].subject.starts_with("!");
-				let should_flip_by_time = should_flip_by_time(&group[i], &group[i + 1]);
-				let flip = starts_with_exclamation || should_flip_by_time;
+				let flip = {
+					if !current_item.marked_nondup() && next_item.marked_nondup() {
+						true
+					} else if should_flip_by_time(&current_item, &next_item) {
+						true
+					} else {
+						false
+					}
+				};
 
 				let indexes = DuplicateIndexes {
 					original: if flip { i + 1 } else { i },

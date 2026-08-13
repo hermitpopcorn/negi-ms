@@ -19,3 +19,9 @@ pub struct ValueRow {
 	pub amount: i64,
 	pub category: String,
 }
+
+impl ValueRow {
+	pub fn marked_nondup(&self) -> bool {
+		return self.subject.starts_with("!");
+	}
+}
