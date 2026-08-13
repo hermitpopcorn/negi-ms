@@ -79,6 +79,18 @@ struct DuplicateIndexes {
 	suspected_duplicate: usize,
 }
 
+fn should_flip_by_time(current: &ValueRow, next: &ValueRow) -> bool {
+	let current_time_of_day = current.date_value.fract() * 86400.0;
+	let next_time_of_day = next.date_value.fract() * 86400.0;
+
+	let current_minutes = (current_time_of_day as i64 / 60) % 60;
+	let current_seconds = (current_time_of_day as i64) % 60;
+	let next_minutes = (next_time_of_day as i64 / 60) % 60;
+	let next_seconds = (next_time_of_day as i64) % 60;
+
+	current_minutes == 0 && current_seconds == 0 && (next_minutes != 0 || next_seconds != 0)
+}
+
 fn find_possible_duplicates(map: &GroupedMap) -> Vec<ValueRow> {
 	let mut possible_duplicates = vec![];
 
@@ -94,9 +106,14 @@ fn find_possible_duplicates(map: &GroupedMap) -> Vec<ValueRow> {
 					continue;
 				}
 
-				// if the latter is marked as not duplicate, flip
-				let flip =
+				// if only the latter is marked as not duplicate, or the earlier row is at HH:00:00,
+				// flip the original/suspected-duplicate decision
+				// (we prefer exact-timed transactions over transactions dated at HH:00:00)
+				let starts_with_exclamation =
 					!group[i].subject.starts_with("!") && group[i + 1].subject.starts_with("!");
+				let should_flip_by_time = should_flip_by_time(&group[i], &group[i + 1]);
+				let flip = starts_with_exclamation || should_flip_by_time;
+
 				let indexes = DuplicateIndexes {
 					original: if flip { i + 1 } else { i },
 					suspected_duplicate: if flip { i } else { i + 1 },
@@ -195,4 +212,35 @@ fn match_subject_to_categories(values: Vec<ValueRow>, category_map: &CategoryMap
 		// filter out non-matches
 		.filter(|i| i.category.len() > 0)
 		.collect::<Vec<ValueRow>>()
+}
+
+#[cfg(test)]
+mod tests {
+	use super::ValueRow;
+	use super::should_flip_by_time;
+
+	#[test]
+	fn flips_when_earlier_row_is_on_the_hour_and_later_row_has_nonzero_minutes_or_seconds() {
+		const CURRENT_DATE_VALUE: f64 = 1.5; // 12:00:00 in a serialized Excel-style day value
+		const NEXT_DATE_VALUE: f64 = 1.5006944444444445; // 12:00:30 in the same scale
+
+		let current = ValueRow {
+			row_number: 2,
+			account: "Bank".to_string(),
+			subject: "".to_string(),
+			date_value: CURRENT_DATE_VALUE,
+			amount: 1000,
+			category: "".to_string(),
+		};
+		let next = ValueRow {
+			row_number: 3,
+			account: "Bank".to_string(),
+			subject: "".to_string(),
+			date_value: NEXT_DATE_VALUE,
+			amount: 1000,
+			category: "".to_string(),
+		};
+
+		assert!(should_flip_by_time(&current, &next));
+	}
 }
