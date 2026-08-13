@@ -52,7 +52,7 @@ fn make_grouped_map(values: Vec<ValueRow>) -> GroupedMap {
 	// group rows
 	for v in values {
 		// skip ones already marked as duplicate
-		if v.subject.starts_with("?") {
+		if v.marked_dup() {
 			continue;
 		}
 
@@ -211,7 +211,7 @@ fn match_subject_to_categories(values: Vec<ValueRow>, category_map: &CategoryMap
 		// set the category if subject contains the keyword
 		.map(|mut i| {
 			for (k, v) in category_map.iter() {
-				if !i.subject.contains(k) {
+				if !i.subject_matches(k) {
 					continue;
 				}
 
