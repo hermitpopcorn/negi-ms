@@ -8,7 +8,7 @@ const account = ref('');
 const datetime = ref(initialDate.slice(0, 16));
 const subject = ref('');
 const amount = ref('');
-const password = ref('');
+const password = ref(window.localStorage.getItem('password') ?? '');
 const submitting = ref(false);
 
 const handleSubmit = async () => {
@@ -39,6 +39,7 @@ const handleSubmit = async () => {
     alert('Submitted successfully.');
     subject.value = '';
     amount.value = '';
+    window.localStorage.setItem('password', password.value);
   } catch (error) {
     alert(error);
   } finally {
